@@ -2094,7 +2094,8 @@ AJ.temario = q => {
   const g = q.g || grados[0] || '2'; const b = Number(q.b || bimestreDe(hoy()));
   const ls = temas(t => String(t.grado) === g && Number(t.bim) === b);
   return '<h1 style="font-size:26px">Temario</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/temario?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/temario?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
-    '<div class="lista">' + (ls.length ? ls.map(t => '<div class="item"><span class="tx"><b>' + esc(t.nombre) + '</b><span>' + esc(COMP[t.comp] ? COMP[t.comp].corto : '—') + ' › ' + esc(CAP[t.cap] ? CAP[t.cap].nombre : '—') + ' · ' + (t.crit || []).length + ' criterios</span><span>Producto: ' + esc(t.producto || '—') + '</span></span><button class="btn chico" data-act="editarTema" data-id="' + t.id + '">Editar</button></div>').join('') : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
+    (ls.length ? '<div class="fila"><span class="muted peq" style="flex:1">' + ls.length + ' temas · toca un tema para ver su propósito, producto, capacidades y criterios</span><button class="btn chico" data-act="abrirTodos">Abrir todos</button><button class="btn chico" data-act="cerrarTodos">Cerrar todos</button></div>' : '') +
+    '<div class="lista">' + (ls.length ? ls.map(t => fichaTema(t)).join('') : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
     '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button></div>' +
     '<div class="tarjeta col"><h2 style="font-size:19px">Cargar desde Excel</h2>' +
     '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
@@ -2102,6 +2103,25 @@ AJ.temario = q => {
     '<p class="muted peq" style="margin:0;line-height:1.5">Banco de criterios: tu archivo con la hoja «Banco_Criterios» (columnas Grado, Competencia, Capacidad y Criterio). Sus criterios aparecen al elegir criterios en cada ficha, según el grado.</p>' +
     '<div class="fila"><label class="btn" for="xlsBanco" style="cursor:pointer">Importar banco de criterios</label><input id="xlsBanco" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarBanco"><span class="muted peq">' + dbList('crit').length + ' criterios en el banco</span></div></div>';
 };
+function fichaTema(t) {
+  const caps = capsDe(t);
+  const usado = sesiones(x => x.temaId === t.id).length;
+  return '<details class="tarjeta tema-det" style="padding:0">' +
+    '<summary style="list-style:none;cursor:pointer;padding:14px 18px;display:flex;gap:12px;align-items:center">' +
+    '<span class="ini" style="flex-shrink:0">' + (t.orden && t.orden < 100 ? t.orden : '•') + '</span>' +
+    '<span class="tx" style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:17px">' + esc(t.nombre) + '</b>' +
+    '<span class="muted peq">' + esc(COMP[t.comp] ? COMP[t.comp].corto : '—') + ' · ' + caps.length + ' capacidad' + (caps.length === 1 ? '' : 'es') + ' · ' + (t.crit || []).length + ' criterios' + (usado ? ' · usado en ' + usado + ' ficha' + (usado > 1 ? 's' : '') : '') + '</span></span>' +
+    '<span class="muted" aria-hidden="true">▾</span></summary>' +
+    '<div class="col" style="padding:0 18px 16px;gap:10px;border-top:1px solid var(--linea)">' +
+    '<div style="padding-top:12px"><span class="etq">Propósito</span><div>' + esc(t.proposito || '—') + '</div></div>' +
+    '<div><span class="etq">Producto de la clase</span><div>' + esc(t.producto || '—') + '</div></div>' +
+    '<div><span class="etq">Competencia</span><div>' + esc(COMP[t.comp] ? COMP[t.comp].nombre : '—') + '</div></div>' +
+    caps.map(k => '<div><span class="etq">' + esc(CAP[k].nombre) + '</span><ol style="margin:4px 0 0;padding-left:22px;line-height:1.45">' +
+      (t.crit || []).map((c, i) => capDe(t, i) === k ? '<li value="' + (i + 1) + '">' + esc(c) + '</li>' : '').join('') + '</ol></div>').join('') +
+    '<div><button class="btn chico" data-act="editarTema" data-id="' + t.id + '">Editar tema</button></div></div></details>';
+}
+ACC.abrirTodos = () => document.querySelectorAll('.tema-det').forEach(d => d.open = true);
+ACC.cerrarTodos = () => document.querySelectorAll('.tema-det').forEach(d => d.open = false);
 /* ---------- Importar temario y banco desde Excel ---------- */
 function columnas(filas, claves) {
   for (let r = 0; r < Math.min(filas.length, 15); r++) {
