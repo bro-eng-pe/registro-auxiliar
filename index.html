@@ -334,7 +334,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.2.0';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -537,7 +537,7 @@ function setCfg(cambios) { dbPut('cfg', 'general', Object.assign({}, dbGet('cfg'
 /* ---------- Bimestres ---------- */
 function bimestres() {
   const out = [];
-  for (let n = 1; n <= 4; n++) { const b = dbGet('bim', String(n)); out.push({ n, inicio: b && b.inicio || '', fin: b && b.fin || '', sugerido: !!(b && b.sugerido) }); }
+  for (let n = 1; n <= 4; n++) { const b = dbGet('bim', String(n)); out.push({ n, inicio: b && b.inicio || '', fin: b && b.fin || '', sugerido: !!(b && b.sugerido), botones: Number(b && b.botones) || MAX_BOTONES }); }
   return out;
 }
 function bimestreDe(fecha) {
@@ -605,7 +605,9 @@ function siguienteNumeroCitacion(aulaId, fecha) {
 function citaciones(filtro) { return dbList('cit').filter(filtro || (() => true)).sort((a, b) => a.fecha.localeCompare(b.fecha)); }
 
 /* ---------- Temario ---------- */
-function temas(filtro) { return dbList('tema').filter(filtro || (() => true)).sort((a, b) => (a.bim - b.bim) || (a.orden || 0) - (b.orden || 0) || a.nombre.localeCompare(b.nombre)); }
+function unidadNum(u) { u = String(u || '').trim().toUpperCase(); const r = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6, VII: 7, VIII: 8, IX: 9, X: 10 }; return r[u] || Number(u.replace(/\D/g, '')) || 0; }
+function temas(filtro) { return dbList('tema').filter(filtro || (() => true)).sort((a, b) => (a.bim - b.bim) || (unidadNum(a.unidad) - unidadNum(b.unidad)) || (a.orden || 0) - (b.orden || 0) || a.nombre.localeCompare(b.nombre)); }
+function etiquetaUnidad(t) { return t.unidad ? 'Unidad ' + t.unidad : 'Sin unidad'; }
 function temasDeAula(aulaId, bim) {
   const a = dbGet('aula', aulaId);
   return temas(t => String(t.grado) === String(a.grado) && (!bim || Number(t.bim) === Number(bim)));
@@ -633,6 +635,7 @@ function agregarCriterioBanco(capId, texto, grado) {
 
 /* ---------- Sesiones (fichas de cotejo y rúbricas) ---------- */
 const MAX_BOTONES = 25;
+function maxBotones(bim) { const b = dbGet('bim', String(bim)); return Math.max(1, Number(b && b.botones) || MAX_BOTONES); }
 function sesiones(filtro) { return dbList('ses').filter(filtro || (() => true)).sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.n - b.n) || a.tipo.localeCompare(b.tipo)); }
 function sesionesAula(aulaId, bim, tipo) { return sesiones(s => s.aulaId === aulaId && (!bim || s.bim === bim) && (!tipo || s.tipo === tipo)); }
 function numeroClase(s) {
@@ -651,6 +654,10 @@ function crearSesion(aulaId, tipo, fecha) {
 }
 function nota(sesId, estId) { return Object.assign({ c: [], p: [], obs: '', rec: false }, dbGet('nota', sesId + '|' + estId) || {}); }
 function setNota(sesId, estId, cambios) { const n = Object.assign(nota(sesId, estId), cambios, { sesId, estId }); dbPut('nota', sesId + '|' + estId, n); return n; }
+function eliminarSesion(sesId) {
+  notasDeSesion(sesId).forEach(n => dbDel('nota', sesId + '|' + n.estId));
+  dbDel('ses', sesId);
+}
 function notasDeSesion(sesId) { return dbList('nota').filter(n => n.sesId === sesId); }
 
 /* =====================================================================
@@ -1542,19 +1549,19 @@ function vistaBotonesFecha(aulaId, tipo) {
   let btns = usadas.map(s => '<a class="fecha-btn' + (s.fecha === f ? ' usada-hoy' : '') + '" href="#/ses/' + s.id + '" style="text-decoration:none;color:inherit"' + (s.fecha === f ? ' data-foco' : '') + '><b>Clase ' + numeroClase(s) + '</b><span>' + fechaCorta(s.fecha) + ' · ' + esc(s.temaId && dbGet('tema', s.temaId) ? dbGet('tema', s.temaId).nombre : 'Ver / corregir') + '</span></a>');
   let foco = !delDia.length;
   if (bim === bimHoy) {
-    for (let k = delDia.length + 1; k <= 2 && btns.length < MAX_BOTONES; k++) {
+    for (let k = delDia.length + 1; k <= 2 && btns.length < maxBotones(bim); k++) {
       btns.push('<button class="fecha-btn ' + (k === 1 ? 'hoy' : 'hoy2') + '" data-act="nuevaSesion" data-aula="' + aulaId + '" data-tipo="' + tipo + '"' + (foco ? ' data-foco' : '') + '><b>' + (k === 1 ? 'Hoy' : 'Segunda ficha') + '</b><span>' + fechaCorta(f) + ' · ' + (k === 1 ? 'Abrir ficha' : 'Si hoy das dos clases') + '</span></button>');
       foco = false;
     }
   }
-  while (btns.length < MAX_BOTONES) btns.push('<button class="fecha-btn bloq" disabled><b>Bloqueada</b><span>Se habilita en otra fecha</span></button>');
+  while (btns.length < maxBotones(bim)) btns.push('<button class="fecha-btn bloq" disabled><b>Bloqueada</b><span>Se habilita en otra fecha</span></button>');
   const nombre = tipo === 'cotejo' ? 'Fichas de cotejo' : 'Rúbricas';
-  return cabecera({ atras: '#/aula/' + aulaId, titulo: aulaNombre(aulaId) + ' · ' + nombre, sub: usadas.length + ' de ' + MAX_BOTONES + ' usadas · ' + romano(bim) + ' Bimestre' }) +
+  return cabecera({ atras: '#/aula/' + aulaId, titulo: aulaNombre(aulaId) + ' · ' + nombre, sub: usadas.length + ' de ' + maxBotones(bim) + ' usadas · ' + romano(bim) + ' Bimestre' }) +
     '<div class="sub"><nav class="tabs">' + [1, 2, 3, 4].map(n => '<a href="#/aula/' + aulaId + '/fichas/' + tipo + '?bim=' + n + '" class="' + (n === bim ? 'act' : '') + '">' + romano(n) + ' Bimestre</a>').join('') +
     '<a href="#/aula/' + aulaId + '/fichas/' + (tipo === 'cotejo' ? 'rubrica' : 'cotejo') + '" style="margin-left:auto">Ir a ' + (tipo === 'cotejo' ? 'Rúbricas' : 'Fichas de cotejo') + '</a></nav></div>' +
     '<main class="pag"><div class="leyenda"><span><i style="background:var(--sup);box-shadow:inset 0 0 0 2px var(--acento)"></i>Usada · se puede abrir y corregir</span><span><i style="background:var(--acento)"></i>Disponible hoy (máx. 2 por día)</span><span><i style="background:var(--linea)"></i>Bloqueada</span></div>' +
     (bim !== bimHoy ? '<div class="aviso">Estás viendo el ' + romano(bim) + ' Bimestre: solo puedes abrir las fichas ya usadas.</div>' : '') +
-    (usadas.length >= MAX_BOTONES && bim === bimHoy && delDia.length < 2 ? '<div class="aviso">Ya usaste los 25 botones de este bimestre.</div>' : '') +
+    (usadas.length >= maxBotones(bim) && bim === bimHoy && delDia.length < 2 ? '<div class="aviso">Ya usaste los ' + maxBotones(bim) + ' botones de este bimestre. Puedes aumentarlos en Ajustes › Fechas de bimestres.</div>' : '') +
     '<div class="grid-fechas">' + btns.join('') + '</div></main>';
 }
 ACC.nuevaSesion = d => {
@@ -1581,7 +1588,7 @@ VISTAS.ses = (p) => {
     fld('elegirCap', capsDe(s).length > 1 ? 'Capacidades' : 'Capacidad', capsDe(s).length > 1 ? capsDe(s).map(k => CAP[k].nombre).join(' · ') : (s.cap ? CAP[s.cap].nombre : ''), 'Elegir capacidad…', true) + '</div>' +
     '<div class="chips"><span class="fld" style="min-height:0;border:0;background:none;padding:0"><span class="fl">Criterios</span></span>' +
     (s.crit || []).map((c, i) => '<span class="chip" title="' + esc(CAP[capDe(s, i)] ? CAP[capDe(s, i)].nombre : '') + '"><b>C' + (i + 1) + '</b> ' + esc(c) + (capsDe(s).length > 1 && CAP[capDe(s, i)] ? ' <span class="muted">· ' + esc(CAP[capDe(s, i)].corto) + '</span>' : '') + '</span>').join('') +
-    '<button class="btn chico punteado" data-act="elegirCrit" data-ses="' + s.id + '">' + ((s.crit || []).length ? 'Cambiar criterios' : '+ Elegir o escribir criterios') + '</button></div></section>';
+    '<button class="btn chico punteado" data-act="elegirCrit" data-ses="' + s.id + '">' + ((s.crit || []).length ? 'Cambiar criterios' : '+ Elegir o escribir criterios') + '</button><span style="flex:1"></span><button class="btn chico peligro" data-act="borrarFicha" data-ses="' + s.id + '">Eliminar esta ficha</button></div></section>';
   let cuerpo = '';
   if (!s.comp || !s.cap || !(s.crit || []).length) {
     cuerpo = '<div class="pag" style="padding-top:20px"><div class="aviso">Elige el tema (carga propósito, producto, competencia, capacidad y criterios) o complétalos para empezar a evaluar.</div></div>';
@@ -1641,9 +1648,12 @@ ACC.elegirTema = d => {
   const usoTema = {}; sesiones(x => x.aulaId === s.aulaId && x.temaId && x.id !== s.id).forEach(x => { usoTema[x.temaId] = usoTema[x.temaId] || numeroClase(x); });
   const grupos = [1, 2, 3, 4].map(b => {
     const ts = lista.filter(t => Number(t.bim) === b); if (!ts.length) return '';
+    let uAnt = null;
     return '<div class="etq muted" style="padding:6px 12px 0">' + romano(b) + ' Bimestre' + (b === s.bim ? ' · actual' : '') + '</div>' + ts.map(t => {
       const hecho = usoTema[t.id];
-      return '<button class="opcion' + (hecho ? ' hecho' : '') + (t.id === s.temaId ? ' sel' : '') + '" data-act="ponerTema" data-ses="' + s.id + '" data-tema="' + t.id + '"><span class="pt"></span><span>' + (t.orden && t.orden < 100 ? t.orden + '. ' : '') + esc(t.nombre) + '</span><span class="nota-op">' + (t.id === s.temaId ? 'Seleccionado' : hecho ? 'Hecho · clase ' + hecho : 'Disponible') + '</span></button>';
+      const cabU = (t.unidad || '') !== uAnt && ts.some(x => x.unidad) ? '<div class="peq" style="padding:8px 12px 2px;font-weight:700;color:var(--acento)">' + esc(etiquetaUnidad(t)) + '</div>' : '';
+      uAnt = t.unidad || '';
+      return cabU + '<button class="opcion' + (hecho ? ' hecho' : '') + (t.id === s.temaId ? ' sel' : '') + '" data-act="ponerTema" data-ses="' + s.id + '" data-tema="' + t.id + '"><span class="pt"></span><span>' + (t.orden && t.orden < 100 ? t.orden + '. ' : '') + esc(t.nombre) + '</span><span class="nota-op">' + (t.id === s.temaId ? 'Seleccionado' : hecho ? 'Hecho · clase ' + hecho : 'Disponible') + '</span></button>';
     }).join('');
   }).join('');
   abrirModal({ titulo: 'Temas de ' + aulaNombre(s.aulaId), cuerpo: (grupos || '<div class="aviso">No hay temas para ' + dbGet('aula', s.aulaId).grado + '.° grado. Crea uno aquí o en Ajustes › Temario.</div>') + '<p class="muted peq" style="margin:0">Los temas en gris ya se desarrollaron en esta sección.</p>',
@@ -1710,6 +1720,17 @@ ACC.togCrit = d => { const x = UI._crit; const i = x.sel.indexOf(d.t); if (i >= 
 ACC.nuevoCrit = () => { const v = document.getElementById('ncrit').value.trim(); if (!v) return; const x = UI._crit; const s = sesActual(x.ses); agregarCriterioBanco(x.vista, v, (dbGet('aula', s.aulaId) || {}).grado); if (x.sel.length < 8 && !x.sel.includes(v)) { x.sel.push(v); x.capMap[v] = x.vista; } pintarCriterios(); };
 ACC.guardarCrit = () => { const x = UI._crit; const s = sesActual(x.ses); if (!x.sel.length) { toast('Elige al menos un criterio.'); return; } cambiarCriterios(s, x.sel.slice(), x.sel.map(t => x.capMap[t] || x.vista)); cerrarModal(); render({ mantener: true }); };
 ACC.temaRapido = d => { const s = sesActual(d.ses); const a = dbGet('aula', s.aulaId); abrirFormTema({ grado: a.grado, bim: s.bim }, s.id); };
+
+ACC.borrarFicha = d => {
+  const s = sesActual(d.ses); const n = notasDeSesion(s.id).filter(x => (x.c || []).some(Boolean) || (x.p || []).length || x.obs).length;
+  confirmar('Eliminar la clase ' + numeroClase(s), 'Se borra esta ' + (s.tipo === 'cotejo' ? 'ficha de cotejo' : 'rúbrica') + ' del ' + fechaMedia(s.fecha) + (n ? ' con las calificaciones de ' + n + ' estudiante' + (n > 1 ? 's' : '') : '') + '. El botón de fecha vuelve a quedar libre. La asistencia y la conducta del día no se borran.', 'Eliminar ficha', () => {
+    const aula = s.aulaId, tipo = s.tipo, bim = s.bim;
+    eliminarSesion(s.id);
+    const quedan = sesionesAula(aula, bim, tipo).filter(x => x.fecha === s.fecha);
+    if (quedan.length === 1 && quedan[0].n === 2) dbPut('ses', quedan[0].id, Object.assign({}, dbGet('ses', quedan[0].id), { n: 1 }));
+    programarSync(); toast('Ficha eliminada.'); ir('#/aula/' + aula + '/fichas/' + tipo + '?bim=' + bim);
+  }, true);
+};
 
 'use strict';
 /* =====================================================================
@@ -2095,10 +2116,10 @@ AJ.temario = q => {
   const ls = temas(t => String(t.grado) === g && Number(t.bim) === b);
   return '<h1 style="font-size:26px">Temario</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/temario?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/temario?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
     (ls.length ? '<div class="fila"><span class="muted peq" style="flex:1">' + ls.length + ' temas · toca un tema para ver su propósito, producto, capacidades y criterios</span><button class="btn chico" data-act="abrirTodos">Abrir todos</button><button class="btn chico" data-act="cerrarTodos">Cerrar todos</button></div>' : '') +
-    '<div class="lista">' + (ls.length ? ls.map(t => fichaTema(t)).join('') : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
+    '<div class="lista">' + (ls.length ? (() => { let u = null; return ls.map(t => { const cab = (t.unidad || '') !== u && ls.some(x => x.unidad) ? '<h2 style="font-size:19px;margin-top:8px">' + esc(etiquetaUnidad(t)) + ' · ' + ls.filter(x => (x.unidad || '') === (t.unidad || '')).length + ' temas</h2>' : ''; u = t.unidad || ''; return cab + fichaTema(t); }).join(''); })() : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
     '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button></div>' +
     '<div class="tarjeta col"><h2 style="font-size:19px">Cargar desde Excel</h2>' +
-    '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
+    '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, Unidad, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
     '<div class="fila"><label class="btn" for="xlsTema" style="cursor:pointer">Importar temario desde Excel</label><input id="xlsTema" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarTemario"><button class="btn" data-act="plantillaTemario">Descargar plantilla Excel</button></div>' +
     '<p class="muted peq" style="margin:0;line-height:1.5">Banco de criterios: tu archivo con la hoja «Banco_Criterios» (columnas Grado, Competencia, Capacidad y Criterio). Sus criterios aparecen al elegir criterios en cada ficha, según el grado.</p>' +
     '<div class="fila"><label class="btn" for="xlsBanco" style="cursor:pointer">Importar banco de criterios</label><input id="xlsBanco" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarBanco"><span class="muted peq">' + dbList('crit').length + ' criterios en el banco</span></div></div>';
@@ -2144,7 +2165,7 @@ function bimDe(t) { t = String(t).trim().toUpperCase(); const r = { I: 1, II: 2,
 CAMBIO.importarTemario = async (v, d, el) => {
   const f = el.files[0]; el.value = ''; if (!f) return;
   let filas; try { filas = await XL.leer(f, 'Temario'); } catch (e) { toast('No se pudo leer el archivo: ' + e.message, 'error'); return; }
-  const c = columnas(filas, { grado: ['grado'], bim: ['bimestre'], n: ['n', 'nro', 'sesion'], tema: ['tema', 'titulo'], prop: ['proposito'], prod: ['producto'], comp: ['competencia'], cap: ['capacidad'], crit: ['criterio'] });
+  const c = columnas(filas, { grado: ['grado'], bim: ['bimestre'], unidad: ['unidad'], n: ['n', 'nro', 'sesion'], tema: ['tema', 'titulo'], prop: ['proposito'], prod: ['producto'], comp: ['competencia'], cap: ['capacidad'], crit: ['criterio'] });
   if (!c || c.idx.tema == null || c.idx.crit == null) { toast('No encontré las columnas Tema y Criterio en la primera hoja.', 'error'); return; }
   const I = c.idx; const grupos = new Map(); const errores = [];
   filas.slice(c.r + 1).forEach((fl, k) => {
@@ -2155,7 +2176,7 @@ CAMBIO.importarTemario = async (v, d, el) => {
     const cap = capDeTexto(fl[I.cap] || '', comp);
     if (crit && !cap) { errores.push('Fila ' + (c.r + k + 2) + ': no reconozco la capacidad «' + fl[I.cap] + '»'); return; }
     const key = grado + '|' + bim + '|' + norm(tema);
-    if (!grupos.has(key)) grupos.set(key, { grado, bim, nombre: tema, proposito: String(fl[I.prop] || '').trim(), producto: String(fl[I.prod] || '').trim(), orden: Number(fl[I.n]) || grupos.size + 1, crit: [], critCap: [] });
+    if (!grupos.has(key)) grupos.set(key, { grado, bim, unidad: I.unidad != null ? String(fl[I.unidad] || '').trim() : '', nombre: tema, proposito: String(fl[I.prop] || '').trim(), producto: String(fl[I.prod] || '').trim(), orden: Number(fl[I.n]) || grupos.size + 1, crit: [], critCap: [] });
     const g = grupos.get(key);
     if (crit && !g.crit.some(x => norm(x) === norm(crit))) { g.crit.push(crit); g.critCap.push(cap); }
   });
@@ -2184,7 +2205,7 @@ CAMBIO.importarBanco = async (v, d, el) => {
   });
   programarSync(); toast(n + ' criterios agregados al banco' + (fallas ? ' (' + fallas + ' filas sin capacidad reconocida)' : '') + '.'); render();
 };
-ACC.plantillaTemario = () => XL.descargar([{ nombre: 'Temario', filas: [['Grado', 'Bimestre', 'N.° sesión', 'Tema', 'Propósito', 'Producto de la clase', 'Competencia', 'Capacidad', 'Criterio'], ['2.°', 'IV', 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Formula preguntas comprensibles sobre su familia'], ['2.°', 'IV', 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Responde con información pertinente']], anchos: [8, 9, 9, 36, 46, 34, 40, 44, 60], fijas: 4 }], 'Plantilla-Temario.xlsx');
+ACC.plantillaTemario = () => XL.descargar([{ nombre: 'Temario', filas: [['Grado', 'Bimestre', 'Unidad', 'N.° sesión', 'Tema', 'Propósito', 'Producto de la clase', 'Competencia', 'Capacidad', 'Criterio'], ['2.°', 'IV', 7, 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Formula preguntas comprensibles sobre su familia'], ['2.°', 'IV', 7, 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Responde con información pertinente']], anchos: [8, 9, 8, 9, 36, 46, 34, 40, 44, 60], fijas: 5 }], 'Plantilla-Temario.xlsx');
 ACC.nuevoTema = d => abrirFormTema({ grado: d.g, bim: Number(d.b) });
 ACC.editarTema = d => abrirFormTema(Object.assign({ id: d.id }, dbGet('tema', d.id)));
 function abrirFormTema(t, sesId) {
@@ -2193,6 +2214,7 @@ function abrirFormTema(t, sesId) {
   const caps = c => COMPETENCIAS.map(x => '<optgroup label="' + esc(x.corto) + '">' + x.caps.map(k => '<option value="' + k.id + '"' + (k.id === c ? ' selected' : '') + '>' + esc(k.nombre) + '</option>').join('') + '</optgroup>').join('');
   abrirModal({ titulo: t.id ? 'Editar tema' : 'Nuevo tema', ancho: true, cuerpo:
     '<div class="grid-2"><div class="campo"><label for="tg">Grado</label><select id="tg" class="inp">' + [1, 2, 3, 4, 5].map(g => '<option value="' + g + '"' + (String(g) === String(t.grado) ? ' selected' : '') + '>' + g + '.° grado</option>').join('') + '</select></div><div class="campo"><label for="tb">Bimestre</label><select id="tb" class="inp">' + [1, 2, 3, 4].map(n => '<option value="' + n + '"' + (n === Number(t.bim) ? ' selected' : '') + '>' + romano(n) + ' Bimestre</option>').join('') + '</select></div></div>' +
+    '<div class="campo"><label for="tu">Unidad (número)</label><input id="tu" class="inp" style="max-width:160px" value="' + esc(t.unidad || '') + '" placeholder="Ej.: 7"></div>' +
     '<div class="campo"><label for="tn">Tema</label><input id="tn" class="inp" value="' + esc(t.nombre) + '" autofocus></div>' +
     '<div class="campo"><label for="tp">Propósito</label><textarea id="tp" class="inp" style="min-height:70px">' + esc(t.proposito) + '</textarea></div>' +
     '<div class="campo"><label for="tpr">Producto de la clase</label><input id="tpr" class="inp" value="' + esc(t.producto) + '"></div>' +
@@ -2203,7 +2225,7 @@ function abrirFormTema(t, sesId) {
 ACC.guardarTema = () => {
   const x = UI._tema; const cap = document.getElementById('tc').value; const nombre = document.getElementById('tn').value.trim();
   if (!nombre || !cap) { toast('Escribe el tema y elige la capacidad.', 'error'); return; }
-  const v = { grado: document.getElementById('tg').value, bim: Number(document.getElementById('tb').value), nombre, proposito: document.getElementById('tp').value.trim(), producto: document.getElementById('tpr').value.trim(), cap, comp: CAP[cap].comp, crit: document.getElementById('tcr').value.split('\n').map(s => s.trim()).filter(Boolean), orden: Date.now() };
+  const v = { grado: document.getElementById('tg').value, bim: Number(document.getElementById('tb').value), nombre, proposito: document.getElementById('tp').value.trim(), producto: document.getElementById('tpr').value.trim(), cap, comp: CAP[cap].comp, crit: document.getElementById('tcr').value.split('\n').map(s => s.trim()).filter(Boolean), orden: Date.now(), unidad: document.getElementById('tu').value.trim() };
   const id = x.id || uid(); const previo = x.id ? Object.assign({ id }, dbGet('tema', id)) : null;
   if (previo && previo.orden) v.orden = previo.orden;
   v.critCap = v.crit.map(t => { if (!previo) return cap; const i = (previo.crit || []).findIndex(y => norm(y) === norm(t)); return i >= 0 ? capDe(previo, i) : cap; });
@@ -2215,8 +2237,8 @@ ACC.guardarTema = () => {
 ACC.borrarTema = () => { const id = UI._tema.id; confirmar('Eliminar tema', 'Las fichas que ya lo usaron conservan sus notas.', 'Eliminar', () => { dbDel('tema', id); programarSync(); render(); }, true); };
 
 /* ---------- Bimestres ---------- */
-AJ.bimestres = () => '<h1 style="font-size:26px">Fechas de bimestres</h1><form class="tarjeta col" data-envio="guardarBims">' + bimestres().map(b => '<div class="fila"><b style="width:120px">' + romano(b.n) + ' Bimestre</b><div class="campo"><label for="bi' + b.n + '">Inicio</label><input id="bi' + b.n + '" type="date" class="inp" value="' + b.inicio + '"></div><div class="campo"><label for="bf' + b.n + '">Fin</label><input id="bf' + b.n + '" type="date" class="inp" value="' + b.fin + '"></div></div>').join('') + '<button class="btn prim" style="align-self:flex-start">Guardar fechas</button><p class="muted peq" style="margin:0">Cada ficha se guarda en el bimestre de su fecha. Los 25 botones se renuevan en cada bimestre.</p></form>';
-ACC.guardarBims = () => { [1, 2, 3, 4].forEach(n => dbPut('bim', String(n), { inicio: document.getElementById('bi' + n).value, fin: document.getElementById('bf' + n).value })); programarSync(); toast('Fechas guardadas.'); render(); };
+AJ.bimestres = () => '<h1 style="font-size:26px">Fechas de bimestres</h1><form class="tarjeta col" data-envio="guardarBims">' + bimestres().map(b => '<div class="fila"><b style="width:120px">' + romano(b.n) + ' Bimestre</b><div class="campo"><label for="bi' + b.n + '">Inicio</label><input id="bi' + b.n + '" type="date" class="inp" value="' + b.inicio + '"></div><div class="campo"><label for="bf' + b.n + '">Fin</label><input id="bf' + b.n + '" type="date" class="inp" value="' + b.fin + '"></div><div class="campo"><label for="bb' + b.n + '">Botones de fichas</label><input id="bb' + b.n + '" type="number" min="1" max="120" class="inp" style="width:120px" value="' + b.botones + '"></div></div>').join('') + '<button class="btn prim" style="align-self:flex-start">Guardar</button><p class="muted peq" style="margin:0;line-height:1.5">Cada ficha se guarda en el bimestre de su fecha. «Botones de fichas» es cuántas clases puedes registrar en el bimestre en fichas de cotejo, y otro tanto en rúbricas. Si en un bimestre trabajas 3 unidades de 18 clases, pon 54 o más.</p></form>';
+ACC.guardarBims = () => { [1, 2, 3, 4].forEach(n => dbPut('bim', String(n), { inicio: document.getElementById('bi' + n).value, fin: document.getElementById('bf' + n).value, botones: Math.max(1, Math.min(120, Number(document.getElementById('bb' + n).value) || MAX_BOTONES)) })); programarSync(); toast('Fechas guardadas.'); render(); };
 
 /* ---------- Citación ---------- */
 AJ.citacion = () => { const c = cfg(); return '<h1 style="font-size:26px">Datos para la citación</h1><form class="tarjeta col" data-envio="guardarCit">' +
