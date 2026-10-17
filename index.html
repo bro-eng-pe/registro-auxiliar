@@ -341,7 +341,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.3.3';
+const APP_VERSION = '2.3.4';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -1442,7 +1442,7 @@ VISTAS.inicio = () => {
     const n = estudiantes(a.id).length;
     const cits = citaciones(c => c.aulaId === a.id && c.cita >= f).length;
     const sesHoy = sesionesAula(a.id, bim).filter(s => s.fecha === f);
-    const alerta = cits ? '<span class="al" style="color:var(--peligro)">' + cits + ' citación' + (cits > 1 ? 'es' : '') + '</span>' : sesHoy.length ? '<span class="al" style="color:var(--acento)">Hoy: clase ' + numeroClase(sesHoy[0]) + '</span>' : '<span class="al muted">Al día</span>';
+    const alerta = cits ? '<span class="al" style="color:var(--peligro)">' + cits + (cits > 1 ? ' citaciones' : ' citación') + '</span>' : sesHoy.length ? '<span class="al" style="color:var(--acento)">Hoy: clase ' + numeroClase(sesHoy[0]) + '</span>' : '<span class="al muted">Al día</span>';
     return '<a class="aula-btn" href="#/aula/' + a.id + '" style="text-decoration:none;color:inherit"><span class="muted peq">' + esc(a.grado) + '.° de secundaria</span><span class="cod">' + esc(a.grado + a.seccion) + '</span><span class="peq">' + n + ' estudiantes</span>' + alerta + '</a>';
   }).join('');
   const bims = bimestres();
@@ -1484,7 +1484,7 @@ VISTAS.aula = (p) => {
     m('#/aula/' + aulaId + '/fichas/rubrica', 'Evaluar', 'Rúbricas', 'AD · A · B · C por criterio + participación.') +
     m('#/aula/' + aulaId + '/registros/general', 'Consultar', 'Registros', 'General, individual, por tema, estadísticas y mapa de calor.') +
     m('#/buscar?q=' + encodeURIComponent(a.grado + a.seccion), 'Buscar', 'Vista para padres', 'Busca un estudiante y muestra su historial completo.') +
-    m('#/citaciones?aula=' + aulaId, 'Conducta', cits.length ? cits.length + ' citación' + (cits.length > 1 ? 'es' : '') + ' hoy' : 'Citaciones', cits.length ? (cits.every(c => c.enviada) ? 'Ya enviadas a tu correo.' : 'Se envían a tu correo al cerrar la clase.') : 'Historial de citaciones de la sección.', cits.length ? 'avi' : '') +
+    m('#/citaciones?aula=' + aulaId, 'Conducta', cits.length ? cits.length + (cits.length > 1 ? ' citaciones' : ' citación') + ' hoy' : 'Citaciones', cits.length ? (cits.every(c => c.enviada) ? 'Ya enviadas a tu correo.' : 'Se envían a tu correo al cerrar la clase.') : 'Historial de citaciones de la sección.', cits.length ? 'avi' : '') +
     '</div>' + (cits.length && cits.some(c => !c.enviada) ? '<button class="btn prim" data-act="cerrarClase" data-aula="' + aulaId + '" style="align-self:flex-start">Cerrar la clase de hoy y enviar citaciones</button>' : '') + '</main>';
 };
 
@@ -1563,11 +1563,18 @@ VISTAS.citaciones = (p, q) => {
   const prox = lista.filter(c => c.cita >= f), pas = lista.filter(c => c.cita < f);
   const item = c => { const e = dbGet('est', c.estId) || { ap: '—', no: '' };
     return '<div class="item"><span class="ini">' + iniciales(e) + '</span><span class="tx"><b>' + esc(nombreEst(e)) + ' · ' + esc(aulaNombre(c.aulaId)) + '</b><span>Hecho: ' + esc(fechaMedia(c.fecha)) + ' · Cita: ' + esc(fechaMedia(c.cita)) + ', ' + esc(cfg().hora) + '</span><span>' + esc(c.desc || 'Sin descripción') + '</span></span>' +
-      '<span class="col" style="align-items:flex-end;gap:6px"><span class="etiqueta ' + (c.enviada ? 'verde' : '') + '">' + (c.enviada ? 'Enviada al correo' : (DB.meta.colaCorreo || []).some(m => m.id.split(',').includes(c.id)) ? 'En cola para el correo' : 'Por enviar') + '</span><button class="btn chico" data-act="bajarCitacion" data-id="' + c.id + '">Descargar Word</button></span></div>'; };
+      '<span class="col" style="align-items:flex-end;gap:6px"><span class="etiqueta ' + (c.enviada ? 'verde' : '') + '">' + (c.enviada ? 'Enviada al correo' : (DB.meta.colaCorreo || []).some(m => m.id.split(',').includes(c.id)) ? 'En cola para el correo' : 'Por enviar') + '</span><span class="fila" style="gap:6px"><button class="btn chico" data-act="bajarCitacion" data-id="' + c.id + '">Descargar Word</button><button class="btn chico peligro" data-act="quitarCitacion" data-id="' + c.id + '">Quitar</button></span></span></div>'; };
   return cabecera({ atras: aulaId ? '#/aula/' + aulaId : '#/', titulo: 'Citaciones' + (aulaId ? ' · ' + aulaNombre(aulaId) : ''), sub: 'Atención a padres: ' + DIAS[cfg().diaCita] + ', ' + cfg().hora }) +
     '<main class="pag">' + (prox.length ? '<div class="fila"><h2 style="font-size:20px;flex:1">Próximas (' + prox.length + ')</h2><button class="btn" data-act="bajarCitaciones" data-aula="' + aulaId + '">Descargar todas en un Word</button></div><div class="lista">' + prox.map(item).join('') + '</div>' : '<div class="aviso verde">No hay citaciones pendientes.</div>') +
     (aulaId && citaciones(c => c.aulaId === aulaId && c.fecha === f && !c.enviada).length ? '<button class="btn prim" data-act="cerrarClase" data-aula="' + aulaId + '" style="align-self:flex-start">Enviar las de hoy a mi correo</button>' : '') +
     (pas.length ? '<h2 style="font-size:20px">Anteriores</h2><div class="lista">' + pas.map(item).join('') + '</div>' : '') + '</main>';
+};
+ACC.quitarCitacion = d => {
+  const c = dbGet('cit', d.id); if (!c) return; const e = dbGet('est', c.estId);
+  confirmar('Quitar citación', 'Se borrará la citación de ' + (e ? nombreEst(e) : 'este estudiante') + ' del ' + fechaMedia(c.fecha) + ' y su conducta de ese día volverá a la normalidad, así que su nota ya no bajará por conducta.', 'Quitar', () => {
+    const a = dbGet('asis', d.id); if (a && a.cond === 'C') dbPut('asis', d.id, Object.assign({}, a, { cond: null, desc: '' }));
+    dbDel('cit', d.id); programarSync(); toast('Citación quitada.'); render({ mantener: true });
+  }, true);
 };
 ACC.bajarCitacion = d => descargarCitacion(Object.assign({ id: d.id }, dbGet('cit', d.id)));
 ACC.bajarCitaciones = d => { const f = hoy(); descargarCitaciones(citaciones(c => c.cita >= f && (!d.aula || c.aulaId === d.aula)), 'Citaciones-' + (d.aula ? aulaCodigo(d.aula) + '-' : '') + hoy() + '.docx'); };
