@@ -336,7 +336,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.2.2';
+const APP_VERSION = '2.2.3';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -1308,6 +1308,7 @@ function vistaIngreso() {
     '<div style="font-size:15px;color:#d9e8e3">' + esc(cfg().colegio || 'Versión ' + APP_VERSION) + '</div></div>';
   let form = '';
   const bloqueo = DB.meta.bloqueoHasta && DB.meta.bloqueoHasta > Date.now();
+  if (bloqueo) { clearTimeout(UI._tBloqueo); UI._tBloqueo = setTimeout(() => { if (!UI.sesionAbierta) render(); }, DB.meta.bloqueoHasta - Date.now() + 1000); }
   if (!hayCredenciales()) {
     if (ING.modo === 'conectar') {
       form = '<form data-envio="conectarRespaldo"><h2 style="font-size:30px">Conectar con mi respaldo</h2>' +
@@ -1336,7 +1337,7 @@ function vistaIngreso() {
   } else {
     form = '<form data-envio="ingresar"><h2 style="font-size:30px">Ingresar</h2>' +
       '<div class="campo"><label for="iu">Usuario</label><input id="iu" class="inp" required autocomplete="username" autocapitalize="none" value="' + esc(DB.meta.ultimoUsuario || '') + '"></div>' +
-      '<div class="campo"><label for="ip">Contraseña</label><input id="ip" class="inp" type="password" required autocomplete="current-password"' + (DB.meta.ultimoUsuario ? ' autofocus' : '') + '></div>' +
+      '<div class="campo"><label for="ip">Contraseña</label><input id="ip" class="inp" type="password" required autocapitalize="none" autocorrect="off" autocomplete="current-password"' + (DB.meta.ultimoUsuario ? ' autofocus' : '') + '></div>' +
       (bloqueo ? '<div class="aviso rojo">Demasiados intentos fallidos. Vuelve a intentar a las ' + new Date(DB.meta.bloqueoHasta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) + '.</div>' : '') +
       (ING.error ? '<div class="aviso rojo">' + esc(ING.error) + '</div>' : '') +
       '<button class="btn prim" style="min-height:56px"' + (bloqueo ? ' disabled' : '') + '>Continuar</button>' +
@@ -2132,7 +2133,7 @@ AJ.temario = q => {
   return '<h1 style="font-size:26px">Temario</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/temario?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/temario?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
     (ls.length ? '<div class="fila"><span class="muted peq" style="flex:1">' + ls.length + ' temas · toca un tema para ver su propósito, producto, capacidades y criterios</span><button class="btn chico" data-act="abrirTodos">Abrir todos</button><button class="btn chico" data-act="cerrarTodos">Cerrar todos</button></div>' : '') +
     '<div class="lista">' + (ls.length ? (() => { let u = null; return ls.map(t => { const cab = (t.unidad || '') !== u && ls.some(x => x.unidad) ? '<h2 style="font-size:19px;margin-top:8px">' + esc(etiquetaUnidad(t)) + ' · ' + ls.filter(x => (x.unidad || '') === (t.unidad || '')).length + ' temas</h2>' : ''; u = t.unidad || ''; return cab + fichaTema(t); }).join(''); })() : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
-    '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button></div>' +
+    '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button><span style="flex:1"></span>' + (ls.length ? '<button class="btn peligro" data-act="borrarTemas" data-g="' + g + '" data-b="' + b + '">Borrar los ' + ls.length + ' temas de ' + g + '.° grado · ' + romano(b) + ' Bim.</button>' : '') + '</div>' +
     '<div class="tarjeta col"><h2 style="font-size:19px">Cargar desde Excel</h2>' +
     '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, Unidad, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
     '<div class="fila"><label class="btn" for="xlsTema" style="cursor:pointer">Importar temario desde Excel</label><input id="xlsTema" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarTemario"><button class="btn" data-act="plantillaTemario">Descargar plantilla Excel</button></div>' +
@@ -2389,6 +2390,14 @@ ACC.copiarCodigo = async () => {
   const c = codigoConexion(); if (!c) return;
   try { await navigator.clipboard.writeText(c); toast('Código copiado. Pégalo en WhatsApp o en un correo para ti.'); }
   catch (e) { pedirTexto('Código de conexión', 'Selecciona todo el texto y cópialo', c, () => { }, { ok: 'Listo' }); }
+};
+
+ACC.borrarTemas = d => {
+  const ls = temas(t => String(t.grado) === d.g && Number(t.bim) === Number(d.b));
+  const usados = ls.filter(t => sesiones(x => x.temaId === t.id).length).length;
+  confirmar('Borrar temas', 'Se borrarán los ' + ls.length + ' temas de ' + d.g + '.° grado del ' + romano(Number(d.b)) + ' Bimestre. ' + (usados ? usados + ' de ellos ya se usaron en fichas: esas fichas conservan sus criterios y notas, pero quedan sin tema.' : 'Ninguno se usó todavía en fichas.') + ' Luego puedes importar el temario correcto.', 'Borrar temas', () => {
+    ls.forEach(t => dbDel('tema', t.id)); programarSync(); toast(ls.length + ' temas borrados.'); render();
+  }, true);
 };
 
 'use strict';
