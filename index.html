@@ -165,7 +165,7 @@ button.fld { cursor: pointer; } button.fld:hover { border-color: var(--acento); 
 .chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .chip { background: var(--sup); border: 1px solid var(--linea2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
 .ficha-lista { display: flex; flex-direction: column; }
-.frow { display: grid; grid-template-columns: 34px minmax(170px, 1fr) auto auto 56px 44px; gap: 10px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--linea); background: var(--sup); }
+.frow { display: grid; grid-template-columns: 34px minmax(170px, 1fr) auto 214px 64px 44px; gap: 10px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--linea); background: var(--sup); }
 .frow:nth-child(even) { background: var(--sup2); }
 .frow.cab-row { position: sticky; top: 64px; z-index: 5; background: var(--sup); font-size: 12px; font-weight: 700; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; padding-top: 10px; padding-bottom: 10px; }
 .frow.just { background: var(--just); }
@@ -341,7 +341,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.3.2';
+const APP_VERSION = '2.3.3';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -1630,7 +1630,7 @@ VISTAS.ses = (p) => {
     const anchoCrit = esCot ? 104 : 170;
     const c = cfg();
     const cabRow = '<div class="frow cab-row"><span class="fnum">N.°</span><span>Estudiante · ' + vis.length + ' de ' + ests.length + (ocultos ? ' (' + ocultos + ' falta' + (ocultos > 1 ? 's' : '') + ' oculta' + (ocultos > 1 ? 's' : '') + ')' : '') + '</span>' +
-      '<span class="fcrits">' + s.crit.map((t, i) => '<span style="width:' + anchoCrit + 'px;text-align:center" title="' + esc(t) + '">C' + (i + 1) + '</span>').join('') + '</span><span>Participación (toca el nivel)</span><span>Nivel</span><span>Obs.</span></div>';
+      '<span class="fcrits">' + s.crit.map((t, i) => '<span style="width:' + anchoCrit + 'px;text-align:center" title="' + esc(t) + '">C' + (i + 1) + '</span>').join('') + '</span><span>Participación</span><span>Nivel</span><span>Obs.</span></div>';
     const filas = vis.map(e => {
       const a = asistencia(s.aulaId, s.fecha, e.id); const n = nota(s.id, e.id);
       const res = calcularNivelClase(s, e.id, { est: e, nota: n });
@@ -1645,7 +1645,7 @@ VISTAS.ses = (p) => {
       const pc = { AD: 0, A: 0, B: 0, C: 0 }; (n.p || []).forEach(x => pc[x]++);
       const tot = (n.p || []).length;
       const part = '<span class="fpart">' + NIVELES.map(l => '<button class="pbtn' + (pc[l] ? ' tiene-' + l : '') + '" data-act="sumarPart" data-ses="' + s.id + '" data-est="' + e.id + '" data-v="' + l + '" aria-label="Sumar participación ' + l + '">' + l + '<small>' + (pc[l] || '') + '</small></button>').join('') +
-        '<span class="ptot' + (tot >= Number(c.bastante) ? ' bast' : '') + '" title="Total de participaciones">' + tot + '</span><button class="menos" data-act="restarPart" data-ses="' + s.id + '" data-est="' + e.id + '" aria-label="Quitar la última participación"' + (tot ? '' : ' disabled') + '>−</button></span>';
+        '<button class="menos" data-act="restarPart" data-ses="' + s.id + '" data-est="' + e.id + '" title="Quitar la última participación (total: ' + tot + ')" aria-label="Quitar la última participación"' + (tot ? '' : ' disabled') + '>−</button></span>';
       const cambio = res.lv && res.base && res.lv !== res.base;
       const sube = cambio && NIVEL_NUM[res.lv] > NIVEL_NUM[res.base];
       const resH = '<span class="fres" title="' + esc((res.motivos || []).join(', ')) + '">' + lvHtml(res.lv) + (cambio ? '<small class="motivo ' + (sube ? 'sube' : 'baja') + '">' + res.base + (sube ? ' ↑ ' : ' ↓ ') + (a.cond === 'C' && !sube ? 'conducta' : 'partic.') + '</small>' : '') + '</span>';
