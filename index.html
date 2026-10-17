@@ -186,6 +186,11 @@ button.fld { cursor: pointer; } button.fld:hover { border-color: var(--acento); 
 .fpart .ptot.bast { color: var(--acento); }
 .fpart .menos { width: 34px; height: 40px; border: 1px solid var(--linea2); border-radius: 8px; background: var(--sup); font-size: 18px; color: var(--suave); }
 .bloqueo { grid-column: 3 / 5; display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--aviso-t); }
+.fres { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.fres .motivo { font-size: 10px; font-weight: 700; white-space: nowrap; }
+.fres .motivo.sube { color: var(--a); } .fres .motivo.baja { color: var(--peligro); }
+.todo-btn { align-self: flex-start; margin-top: 3px; border: 1px dashed var(--linea2); background: transparent; color: var(--suave); border-radius: 6px; font-size: 12px; padding: 3px 8px; }
+.todo-btn:hover { border-color: var(--acento); color: var(--acento); }
 .obs-btn { width: 44px; height: 40px; border: 1px solid var(--linea2); border-radius: 8px; background: var(--sup); display: flex; align-items: center; justify-content: center; }
 .obs-btn.tiene { background: var(--acento-sv); border-color: var(--acento); }
 /* Modo tarjetas (tableta vertical o elegido en Ajustes › Apariencia) */
@@ -336,7 +341,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.2.3';
+const APP_VERSION = '2.3.1';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -531,7 +536,7 @@ function avisarCambio() { clearTimeout(_timerAviso); _timerAviso = setTimeout(()
    ===================================================================== */
 const CFG_DEF = {
   colegio: '', docente: '', lugar: 'Aula de atención a padres', hora: '9:00 a 9:45 a. m.', diaCita: 5,
-  correo: '', bastante: 12, minAD: 1, gradosLeves: ['2', '5'], area: 'Inglés'
+  correo: '', bastante: 12, minAD: 12, subeBA: true, gradosLeves: ['2', '5'], area: 'Inglés'
 };
 function cfg() { return Object.assign({}, CFG_DEF, dbGet('cfg', 'general') || {}); }
 function setCfg(cambios) { dbPut('cfg', 'general', Object.assign({}, dbGet('cfg', 'general') || {}, cambios)); }
@@ -667,7 +672,9 @@ function notasDeSesion(sesId) { return dbList('nota').filter(n => n.sesId === se
    1) Lista de cotejo: Sí = A, No = C. Rúbrica: AD, A, B o C por criterio.
       Se promedian los criterios (AD=4, A=3, B=2, C=1): ≥3.5 AD, ≥2.5 A, ≥1.5 B, menos C.
    2) Participación: si logró (A o AD) y la mayoría de sus participaciones son AD → AD.
-      Si no logró (B o C) pero participó bastante (≥12) y la mayoría fue AD, A o B → B.
+      Si no logró (C) pero participó bastante (≥12) y la mayoría fue AD, A o B → B.
+      Si está en B, participó bastante (≥12) y la mayoría fue AD o A → A.
+      Para subir de A a AD se piden también 12 participaciones o más (configurable).
    3) Conducta C ese día: 2.° y 5.° grado: AD→B, A→B, B→C. Otros grados: → C.
    4) Falta injustificada = C. Falta justificada: no cuenta hasta recuperar la nota.
    ===================================================================== */
@@ -693,10 +700,14 @@ function calcularNivelClase(ses, estId, extra) {
   let lv = base; const motivos = [];
   const c = cfg(); const p = n.p || []; const tot = p.length;
   const cuenta = l => p.filter(x => x === l).length;
-  if ((base === 'A' || base === 'AD') && tot >= Number(c.minAD) && cuenta('AD') > tot / 2 && base !== 'AD') { lv = 'AD'; motivos.push('participación destacada'); }
-  if ((base === 'B' || base === 'C') && tot >= Number(c.bastante) && (cuenta('AD') + cuenta('A') + cuenta('B')) > tot / 2 && base === 'C') { lv = 'B'; motivos.push('participó bastante'); }
+  const subeAD = tot >= Number(c.minAD) && cuenta('AD') > tot / 2;
+  const subeB = tot >= Number(c.bastante) && (cuenta('AD') + cuenta('A') + cuenta('B')) > tot / 2;
+  const subeA = c.subeBA !== false && tot >= Number(c.bastante) && (cuenta('AD') + cuenta('A')) > tot / 2;
+  const ajustePart = l => (l === 'A' && subeAD) ? 'AD' : (l === 'B' && subeA) ? 'A' : (l === 'C' && subeB) ? 'B' : l;
+  lv = ajustePart(base);
+  if (lv !== base) motivos.push(lv === 'AD' ? 'participación destacada' : 'participó bastante');
   const porCap = {};
-  Object.keys(porCapV).forEach(k => porCap[k] = numANivel(porCapV[k].reduce((x, y) => x + y, 0) / porCapV[k].length));
+  Object.keys(porCapV).forEach(k => porCap[k] = ajustePart(numANivel(porCapV[k].reduce((x, y) => x + y, 0) / porCapV[k].length)));
   if (a.cond === 'C') {
     const aula = dbGet('aula', ses.aulaId) || {};
     const leve = (c.gradosLeves || []).map(String).includes(String(aula.grado));
@@ -715,12 +726,13 @@ function consolidarAula(aulaId, bim) {
   const notas = new Map(); dbList('nota').forEach(n => notas.set(n.sesId + '|' + n.estId, n));
   const porEst = {};
   ests.forEach(e => {
-    const r = { est: e, clases: {}, cap: {}, comp: {}, tema: {} };
+    const r = { est: e, clases: {}, cap: {}, comp: {}, tema: {}, part: { AD: 0, A: 0, B: 0, C: 0, total: 0, clases: 0 } };
     const acumCap = {}, acumComp = {}, acumTema = {};
     ses.forEach(s => {
       const n = Object.assign({ c: [], p: [], obs: '', rec: false }, notas.get(s.id + '|' + e.id) || {});
       const res = calcularNivelClase(s, e.id, { est: e, nota: n });
       r.clases[s.id] = res;
+      if ((n.p || []).length) { n.p.forEach(l => { if (r.part[l] != null) r.part[l]++; }); r.part.total += n.p.length; r.part.clases++; }
       Object.keys(res.porCap || {}).forEach(k => { if (res.porCap[k]) (acumCap[k] = acumCap[k] || []).push(res.porCap[k]); });
       if (res.lv) {
         (acumComp[s.comp] = acumComp[s.comp] || []).push(res.lv);
@@ -732,7 +744,8 @@ function consolidarAula(aulaId, bim) {
     Object.keys(acumTema).forEach(k => r.tema[k] = promedioNiveles(acumTema[k]));
     porEst[e.id] = r;
   });
-  return { aulaId, bim, ests, ses, porEst, notas };
+  const partProm = ests.length ? ests.reduce((t, e) => t + porEst[e.id].part.total, 0) / ests.length : 0;
+  return { aulaId, bim, ests, ses, porEst, notas, partProm };
 }
 function nivelSiagie(aulaId, bim, estId, compId, cons) {
   const o = dbGet('ajuste', aulaId + '|' + bim + '|' + estId + '|' + compId);
@@ -1101,10 +1114,12 @@ const XL = {
 function filasRegistroGeneral(cons) {
   const h1 = ['N.°', 'Apellidos y nombres']; const h2 = ['', ''];
   COMPETENCIAS.forEach(c => { c.caps.forEach((k, i) => { h1.push(i === 0 ? c.corto : ''); h2.push(k.nombre); }); h1.push(''); h2.push('COMPETENCIA'); });
+  h1.push('Participación'); ['Total', 'AD', 'A', 'B', 'C', 'Clases con participación'].forEach((x, i) => { if (i) h1.push(''); h2.push(x); });
   const filas = [h1, h2];
   cons.ests.forEach((e, i) => {
     const r = cons.porEst[e.id]; const f = [i + 1, nombreEst(e)];
     COMPETENCIAS.forEach(c => { c.caps.forEach(k => f.push(r.cap[k.id] || '')); f.push(r.comp[c.id] || ''); });
+    f.push(r.part.total, r.part.AD, r.part.A, r.part.B, r.part.C, r.part.clases);
     filas.push(f);
   });
   return filas;
@@ -1129,7 +1144,7 @@ function filasPorTema(cons) {
 function exportarRegistroExcel(aulaId, bim) {
   const cons = consolidarAula(aulaId, bim);
   const hojas = [];
-  hojas.push({ nombre: 'Registro general', filas: filasRegistroGeneral(cons), anchos: [5, 34].concat(new Array(16).fill(12)), cab: 2 });
+  hojas.push({ nombre: 'Registro general', filas: filasRegistroGeneral(cons), anchos: [5, 34].concat(new Array(16).fill(12)).concat([10, 6, 6, 6, 6, 14]), cab: 2 });
   hojas.push({ nombre: 'Notas por tema', filas: filasPorTema(cons), anchos: [5, 34].concat(new Array(40).fill(18)) });
   hojas.push({ nombre: 'Detalle por clase', filas: filasDetalleClases(cons), anchos: [5, 34].concat(new Array(60).fill(16)) });
   const est = estadisticaCriterios(cons).sort((a, b) => b.bajo - a.bajo);
@@ -1631,11 +1646,15 @@ VISTAS.ses = (p) => {
       const tot = (n.p || []).length;
       const part = '<span class="fpart">' + NIVELES.map(l => '<button class="pbtn' + (pc[l] ? ' tiene-' + l : '') + '" data-act="sumarPart" data-ses="' + s.id + '" data-est="' + e.id + '" data-v="' + l + '" aria-label="Sumar participación ' + l + '">' + l + '<small>' + (pc[l] || '') + '</small></button>').join('') +
         '<span class="ptot' + (tot >= Number(c.bastante) ? ' bast' : '') + '" title="Total de participaciones">' + tot + '</span><button class="menos" data-act="restarPart" data-ses="' + s.id + '" data-est="' + e.id + '" aria-label="Quitar la última participación"' + (tot ? '' : ' disabled') + '>−</button></span>';
-      const resH = '<span class="fres" title="' + esc((res.motivos || []).join(', ')) + '">' + lvHtml(res.lv) + '</span>';
+      const cambio = res.lv && res.base && res.lv !== res.base;
+      const sube = cambio && NIVEL_NUM[res.lv] > NIVEL_NUM[res.base];
+      const resH = '<span class="fres" title="' + esc((res.motivos || []).join(', ')) + '">' + lvHtml(res.lv) + (cambio ? '<small class="motivo ' + (sube ? 'sube' : 'baja') + '">' + res.base + (sube ? ' ↑ ' : ' ↓ ') + (a.cond === 'C' && !sube ? 'conducta' : 'partic.') + '</small>' : '') + '</span>';
       const obs = '<button class="obs-btn' + (n.obs ? ' tiene' : '') + '" data-act="obsNota" data-ses="' + s.id + '" data-est="' + e.id + '" aria-label="Observación">' + ICO.globo + '</button>';
       const cls = 'frow' + (a.e === 'J' ? ' just' : '') + (a.cond === 'C' ? ' cond' : '');
       if (bloqueado) return '<div class="' + cls + '"><span class="fnum muted">' + numeroLista(e) + '</span><span class="fn"><b>' + esc(nombreEst(e)) + '</b>' + tag + tagC + '</span><span class="bloqueo">Falta justificada: no se califica para no equivocarse. <button class="btn chico" data-act="recuperar" data-ses="' + s.id + '" data-est="' + e.id + '">Recuperar nota</button></span><span></span>' + resH + '<span></span></div>';
-      return '<div class="' + cls + '"><span class="fnum muted">' + numeroLista(e) + '</span><span class="fn"><b>' + esc(nombreEst(e)) + '</b>' + tag + tagC + '</span><span class="fcrits">' + crits + '</span>' + part + resH + obs + '</div>';
+      const faltan = s.crit.some((_, i) => !n.c[i]);
+      const todo = faltan ? '<button class="todo-btn" data-act="todoSi" data-ses="' + s.id + '" data-est="' + e.id + '">' + (esCot ? 'Sí en los vacíos' : 'A en los vacíos') + '</button>' : '';
+      return '<div class="' + cls + '"><span class="fnum muted">' + numeroLista(e) + '</span><span class="fn"><b>' + esc(nombreEst(e)) + '</b>' + tag + tagC + todo + '</span><span class="fcrits">' + crits + '</span>' + part + resH + obs + '</div>';
     }).join('');
     cuerpo = '<div class="ficha-lista">' + cabRow + filas + '</div>' +
       '<div class="pag"><div class="leyenda">' + (esCot ? '<span>Sí = A · No = C</span>' : '<span>AD=4 · A=3 · B=2 · C=1, se promedia</span>') + '<span>Participó bastante: desde ' + c.bastante + ' participaciones</span><span>Falta = C</span></div></div>';
@@ -1748,6 +1767,11 @@ ACC.borrarFicha = d => {
   }, true);
 };
 
+ACC.todoSi = d => {
+  const s = sesActual(d.ses); const n = nota(d.ses, d.est); const v = s.tipo === 'cotejo' ? 'S' : 'A';
+  setNota(d.ses, d.est, { c: s.crit.map((_, i) => n.c[i] || v) }); render({ mantener: true }); programarSync();
+};
+
 'use strict';
 /* =====================================================================
    INTERFAZ: registros, estadísticas, vista para padres y SIAGIE
@@ -1755,6 +1779,19 @@ ACC.borrarFicha = d => {
 const COLOR_LV = { AD: 'var(--ad)', A: 'var(--a)', B: 'var(--b)', C: 'var(--c)' };
 const TEXTO_LV = { AD: '#fff', A: '#fff', B: '#17221f', C: '#fff' };
 function pct(n, t) { return t ? Math.round(n * 100 / t) + '%' : '0%'; }
+function barraPart(p) {
+  if (!p.total) return '<span class="muted peq">Sin participaciones</span>';
+  return '<div class="barra" style="height:18px">' + NIVELES.map(l => p[l] ? '<span style="width:' + pct(p[l], p.total) + ';background:' + COLOR_LV[l] + ';color:' + TEXTO_LV[l] + ';font-size:11px" title="' + l + ': ' + p[l] + '">' + (p[l] / p.total >= .15 ? p[l] : '') + '</span>' : '').join('') + '</div>';
+}
+function tarjetaParticipacion(cons, estId, paraPadres) {
+  const p = cons.porEst[estId].part; const prom = cons.partProm;
+  const comp = !p.total ? 'Aún no registra participaciones en este bimestre.' : p.total >= prom * 1.3 ? 'Participa más que el promedio de su sección (' + Math.round(prom) + ').' : p.total >= prom * 0.7 ? 'Participa como el promedio de su sección (' + Math.round(prom) + ').' : 'Participa menos que el promedio de su sección (' + Math.round(prom) + ').';
+  const calidad = p.total ? Math.round((p.AD + p.A) * 100 / p.total) : 0;
+  return '<div class="tarjeta col"><h2 style="font-size:18px">Participación en clase</h2>' +
+    '<div class="fila" style="gap:20px"><span><b style="font-size:26px;font-family:var(--titulo)">' + p.total + '</b> participaciones</span><span class="muted">en ' + p.clases + ' de ' + cons.ses.length + ' clases</span>' + (p.total ? '<span class="muted">' + calidad + '% en logro esperado o destacado</span>' : '') + '</div>' +
+    barraPart(p) + (p.total ? '<div class="leyenda">' + NIVELES.map(l => '<span><i style="background:' + COLOR_LV[l] + '"></i>' + l + ': ' + p[l] + '</span>').join('') + '</div>' : '') +
+    '<span class="peq">' + comp + '</span></div>';
+}
 function barraDist(d) {
   if (!d.total) return '<div class="barra"><span style="width:100%;color:var(--tenue)">Sin datos</span></div>';
   return '<div class="barra">' + NIVELES.map(l => d[l] ? '<span style="width:' + pct(d[l], d.total) + ';background:' + COLOR_LV[l] + ';color:' + TEXTO_LV[l] + '" title="' + l + ': ' + d[l] + '">' + (d[l] / d.total >= .08 ? pct(d[l], d.total) : '') + '</span>' : '').join('') + '</div>';
@@ -1783,13 +1820,14 @@ function vistaRegistros(aulaId, tab) {
 }
 ACC.excelRegistro = d => exportarRegistroExcel(d.aula, Number(d.bim));
 function regGeneral(cons) {
-  let h1 = '<tr><th class="num" rowspan="2">N.°</th><th class="nom" rowspan="2">Estudiante</th>';
+  let h1 = '<tr><th class="num" rowspan="2">N.°</th><th class="nom" rowspan="2">Estudiante</th><th rowspan="2" title="Participaciones en el bimestre" style="min-width:80px">Partic.</th>';
   let h2 = '<tr>';
   COMPETENCIAS.forEach(c => { h1 += '<th class="grupo" colspan="' + (c.caps.length + 1) + '">' + esc(c.corto) + '</th>'; c.caps.forEach(k => h2 += '<th title="' + esc(k.nombre) + '">' + esc(k.corto) + '</th>'); h2 += '<th style="color:var(--tinta)">COMP.</th>'; });
   h1 += '</tr>'; h2 += '</tr>';
   const filas = cons.ests.map((e, i) => {
     const r = cons.porEst[e.id];
-    let t = '<tr><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td>';
+    const pp = r.part;
+    let t = '<tr><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td><td title="AD ' + pp.AD + ' · A ' + pp.A + ' · B ' + pp.B + ' · C ' + pp.C + '"><div style="display:flex;flex-direction:column;gap:2px;align-items:stretch"><b>' + pp.total + '</b>' + (pp.total ? barraPart(pp) : '') + '</div></td>';
     COMPETENCIAS.forEach(c => { c.caps.forEach(k => t += '<td><button class="celda-btn" data-act="verCelda" data-aula="' + cons.aulaId + '" data-bim="' + cons.bim + '" data-est="' + e.id + '" data-cap="' + k.id + '" aria-label="' + esc(k.nombre) + '">' + lvHtml(r.cap[k.id]) + '</button></td>'); t += '<td class="compcol">' + lvHtml(r.comp[c.id]) + '</td>'; });
     return t + '</tr>';
   }).join('');
@@ -1834,9 +1872,14 @@ function regCompetencias(cons) {
   const caps = COMPETENCIAS.map(c => '<div class="col" style="gap:8px"><b>' + esc(c.corto) + '</b>' + c.caps.map(k => { const d = distribucion(cons.ests.map(e => cons.porEst[e.id].cap[k.id])); return '<div class="col" style="gap:4px"><span class="peq">' + esc(k.nombre) + '</span>' + barraDist(d) + '</div>'; }).join('') + '</div>').join('');
   const crit = estadisticaCriterios(cons).filter(o => o.total).sort((a, b) => b.bajo - a.bajo);
   const alertas = alertasIntervencion(cons);
+  const orden = cons.ests.slice().sort((a, b) => cons.porEst[b.id].part.total - cons.porEst[a.id].part.total);
+  const sinPart = orden.filter(e => !cons.porEst[e.id].part.total);
+  const partHtml = '<div class="tarjeta col"><h2 style="font-size:18px">Participación de la sección</h2><span class="muted peq">Promedio: ' + Math.round(cons.partProm) + ' participaciones por estudiante en el bimestre</span>' +
+    orden.slice(0, 5).filter(e => cons.porEst[e.id].part.total).map(e => '<div class="fila peq" style="flex-wrap:nowrap"><span style="flex:1">' + esc(nombreEst(e)) + '</span><b style="width:30px;text-align:right">' + cons.porEst[e.id].part.total + '</b><span style="width:140px">' + barraPart(cons.porEst[e.id].part) + '</span></div>').join('') +
+    (sinPart.length ? '<div class="aviso" style="margin-top:6px"><b>Sin participaciones (' + sinPart.length + '):</b> ' + sinPart.map(e => esc(nombreEst(e))).join('; ') + '</div>' : '<div class="aviso verde">Todos participaron al menos una vez.</div>') + '</div>';
   return '<div class="grid-2"><div class="tarjeta col" style="gap:14px"><h2 style="font-size:18px">Logro por competencia</h2>' + comps + leyendaNiveles() + '</div>' +
     '<div class="tarjeta col" style="background:var(--aviso);color:var(--aviso-t)"><h2 style="font-size:18px">Necesitan intervención</h2>' + (alertas.length ? alertas.map(a => '<div style="line-height:1.45"><a href="#/est/' + a.est.id + '/estadisticas" style="color:inherit;font-weight:700">' + esc(nombreEst(a.est)) + '</a> · ' + esc(a.texto) + '</div>').join('') : '<span>Nadie por ahora.</span>') + '</div></div>' +
-    '<div class="tarjeta col" style="gap:14px"><h2 style="font-size:18px">Logro por capacidad</h2><div class="grid-3">' + caps + '</div></div>' +
+    partHtml + '<div class="tarjeta col" style="gap:14px"><h2 style="font-size:18px">Logro por capacidad</h2><div class="grid-3">' + caps + '</div></div>' +
     '<div class="tarjeta col"><h2 style="font-size:18px">Criterios: del más difícil al más logrado</h2><span class="muted peq">% de evaluaciones en B o C (en la lista de cotejo, No = C)</span>' +
     crit.map(o => '<div class="fila peq" style="flex-wrap:nowrap;border-top:1px solid var(--linea);padding-top:8px"><span style="flex:1">' + esc(o.texto) + '<br><span class="muted">' + esc(COMP[o.comp].corto) + ' › ' + esc(CAP[o.cap].corto) + ' · ' + o.total + ' evaluaciones</span></span><span class="mini-barra"><span style="width:' + Math.round(o.bajo * 100) + '%;background:var(--c)"></span></span><b style="width:44px;text-align:right">' + Math.round(o.bajo * 100) + '%</b></div>').join('') + '</div>';
 }
@@ -1868,6 +1911,7 @@ function estadisticasEstudiante(cons, estId) {
   const condC = as.regs.filter(a => a.cond === 'C').length;
   const dist = distribucion(evals.map(x => x.lv));
   return '<div class="kpis"><div class="kpi"><b>' + as.pct + '%</b><span>Asistencia</span></div><div class="kpi"><b>' + evals.length + '</b><span>Clases evaluadas</span></div><div class="kpi"><b>' + parts + '</b><span>Participaciones</span></div><div class="kpi"><b>' + as.F + '</b><span>Faltas</span></div><div class="kpi"><b>' + condC + '</b><span>Conductas C</span></div></div>' +
+    tarjetaParticipacion(cons, estId) +
     '<div class="tarjeta col"><h2 style="font-size:18px">Logro clase a clase</h2><div class="linea-tiempo" role="img" aria-label="Nivel de logro en cada clase">' + cons.ses.map(s => { const x = r.clases[s.id]; return '<span title="Clase ' + numeroClase(s) + ': ' + (x.lv || '—') + '" style="height:' + (x.lv ? NIVEL_NUM[x.lv] * 25 : 4) + '%;background:' + (x.lv ? COLOR_LV[x.lv] : 'var(--linea)') + '"></span>'; }).join('') + '</div><span class="muted peq">Cada barra es una clase (más alta = mejor logro).</span>' + barraDist(dist) + leyendaNiveles() + '</div>' +
     fichaRegistroEstudiante(cons, estId, false);
 }
@@ -1958,7 +2002,7 @@ function estRegistroPadres(e, bim) {
   const c = cfg();
   return '<div class="tarjeta col" style="gap:4px"><b style="font-family:var(--titulo);font-size:20px">' + esc(c.colegio || 'Registro de ' + c.area) + '</b><span class="muted">Informe de ' + esc(c.area) + ' · ' + esc(nombreEst(e)) + ' · ' + esc(aulaNombre(e.aulaId)) + ' · ' + romano(bim) + ' Bimestre</span></div>' +
     '<div class="kpis"><div class="kpi"><b>' + as.pct + '%</b><span>Asistencia</span></div><div class="kpi"><b>' + cons.ses.filter(s => r.clases[s.id] && r.clases[s.id].lv).length + '</b><span>Clases evaluadas</span></div><div class="kpi"><b>' + condG + '</b><span>Conducta</span></div></div>' +
-    fichaRegistroEstudiante(cons, e.id, false) +
+    fichaRegistroEstudiante(cons, e.id, false) + tarjetaParticipacion(cons, e.id, true) +
     (crit.length ? '<div class="aviso"><b>Para mejorar:</b> ' + crit.map(o => esc(o.texto)).join('; ') + '.</div>' : '<div class="aviso verde">Va logrando los criterios evaluados en este bimestre.</div>') +
     '<div class="fila no-imp"><button class="btn prim" data-act="imprimir">Descargar informe (PDF)</button><span class="muted peq">Elige «Guardar como PDF» en la ventana que se abre.</span></div>';
 }
@@ -2269,11 +2313,11 @@ ACC.guardarCit = () => { setCfg({ colegio: document.getElementById('cc1').value.
 /* ---------- Reglas ---------- */
 AJ.reglas = () => { const c = cfg(); return '<h1 style="font-size:26px">Reglas de calificación</h1><form class="tarjeta col" data-envio="guardarReglas">' +
   '<div class="aviso verde" style="line-height:1.6">Lista de cotejo: Sí = A, No = C. Rúbrica: AD, A, B o C por criterio. Se promedian los criterios (AD=4, A=3, B=2, C=1). Falta injustificada = C. Falta justificada: no cuenta hasta recuperar la nota.</div>' +
-  '<div class="campo"><label for="rg1">«Participó bastante» desde (participaciones en la clase)</label><input id="rg1" type="number" min="1" class="inp" style="max-width:160px" value="' + c.bastante + '"></div><p class="muted peq" style="margin:0">Si no logró (B o C) pero participó bastante y la mayoría de sus participaciones fue AD, A o B, pasa a B (en proceso).</p>' +
-  '<div class="campo"><label for="rg2">Para subir a AD: mínimo de participaciones</label><input id="rg2" type="number" min="1" class="inp" style="max-width:160px" value="' + c.minAD + '"></div><p class="muted peq" style="margin:0">Si logró (A) y la mayoría de sus participaciones fue AD, pasa a AD.</p>' +
+  '<div class="campo"><label for="rg1">«Participó bastante» desde (participaciones en la clase)</label><input id="rg1" type="number" min="1" class="inp" style="max-width:160px" value="' + c.bastante + '"></div><p class="muted peq" style="margin:0">Si está en C pero participó bastante y la mayoría de sus participaciones fue AD, A o B, pasa a B (en proceso).</p><label class="fila" style="gap:10px"><input type="checkbox" id="rg4" style="width:22px;height:22px"' + (c.subeBA !== false ? ' checked' : '') + '> Si está en B, participó bastante y la mayoría fue AD o A, pasa a A</label><p class="muted peq" style="margin:0"></p>' +
+  '<div class="campo"><label for="rg2">Para subir a AD: mínimo de participaciones</label><input id="rg2" type="number" min="1" class="inp" style="max-width:160px" value="' + c.minAD + '"></div><p class="muted peq" style="margin:0">Si logró (A), tiene al menos ese número de participaciones y la mayoría fue AD, pasa a AD.</p>' +
   '<div class="campo"><label for="rg3">Grados con regla de conducta C atenuada (AD→B, A→B, B→C)</label><input id="rg3" class="inp" style="max-width:220px" value="' + esc((c.gradosLeves || []).join(', ')) + '"></div><p class="muted peq" style="margin:0">En los demás grados, la conducta C deja el logro de ese día en C.</p>' +
   '<button class="btn prim" style="align-self:flex-start">Guardar reglas</button></form>'; };
-ACC.guardarReglas = () => { setCfg({ bastante: Math.max(1, Number(document.getElementById('rg1').value) || 12), minAD: Math.max(1, Number(document.getElementById('rg2').value) || 1), gradosLeves: document.getElementById('rg3').value.split(/[,\s]+/).map(s => s.replace(/\D/g, '')).filter(Boolean) }); programarSync(); toast('Reglas guardadas.'); render(); };
+ACC.guardarReglas = () => { setCfg({ bastante: Math.max(1, Number(document.getElementById('rg1').value) || 12), minAD: Math.max(1, Number(document.getElementById('rg2').value) || 12), subeBA: document.getElementById('rg4').checked, gradosLeves: document.getElementById('rg3').value.split(/[,\s]+/).map(s => s.replace(/\D/g, '')).filter(Boolean) }); programarSync(); toast('Reglas guardadas.'); render(); };
 
 /* ---------- Respaldo ---------- */
 AJ.respaldo = () => { const s = syncConfig() || {}; const est = syncEstado();
@@ -2407,6 +2451,9 @@ ACC.borrarTemas = d => {
 async function arrancar() {
   await dbIniciar();
   aplicarTemaVisual();
+  // Reglas acordadas el 17/10/2026: subir a AD pide 12 participaciones (antes 1)
+  const g = dbGet('cfg', 'general');
+  if (g && Number(g.minAD) === 1 && !g.reglas2) setCfg({ minAD: 12, reglas2: true });
   DB.oyentes.push(() => {
     refrescarEstado();
   });
