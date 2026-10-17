@@ -19,7 +19,7 @@
   --linea: #dce5e1; --linea2: #cfdad5; --acento: #1e5a50; --acento-osc: #123a33; --acento-sv: #d9e8e3; --sobre-acento: #ffffff;
   --azul: #1d3f8f; --aviso: #fff4e0; --aviso-t: #5c3a00; --peligro: #b3400b; --peligro-sv: #fdece4; --just: #fff8ea;
   --ad: #1d3f8f; --ad-t: #ffffff; --a: #2f7d4f; --a-t: #ffffff; --b: #e8a33a; --b-t: #17221f; --c: #c2410c; --c-t: #ffffff;
-  --b-sv: #fbe3b8; --b-svt: #5c3a00; --sombra: 0 12px 40px rgba(20, 40, 35, .22);
+  --b-sv: #fbe3b8; --b-svt: #5c3a00; --tarde: #6b4fa1; --sombra: 0 12px 40px rgba(20, 40, 35, .22);
   --r: 14px; --fuente: 'Atkinson Hyperlegible', system-ui, sans-serif; --titulo: 'Bricolage Grotesque', 'Atkinson Hyperlegible', sans-serif;
   color-scheme: light;
 }
@@ -27,14 +27,14 @@
   :root:not([data-theme="light"]) {
     --fondo: #101816; --sup: #18221f; --sup2: #1d2926; --tinta: #e6eeeb; --suave: #a9b8b3; --tenue: #7f8f8a;
     --linea: #2a3834; --linea2: #344541; --acento: #2f7d6d; --acento-osc: #0d2a25; --acento-sv: #1f3a34; --sobre-acento: #ffffff;
-    --aviso: #3a2c12; --aviso-t: #f3d9a6; --peligro: #f08a5d; --peligro-sv: #3a2219; --just: #2e2714; --b-sv: #4a3a17; --b-svt: #f3d9a6;
+    --aviso: #3a2c12; --aviso-t: #f3d9a6; --peligro: #f08a5d; --peligro-sv: #3a2219; --just: #2e2714; --b-sv: #4a3a17; --b-svt: #f3d9a6; --tarde: #8f74cc;
     --sombra: 0 12px 40px rgba(0, 0, 0, .5); color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
   --fondo: #101816; --sup: #18221f; --sup2: #1d2926; --tinta: #e6eeeb; --suave: #a9b8b3; --tenue: #7f8f8a;
   --linea: #2a3834; --linea2: #344541; --acento: #2f7d6d; --acento-osc: #0d2a25; --acento-sv: #1f3a34; --sobre-acento: #ffffff;
-  --aviso: #3a2c12; --aviso-t: #f3d9a6; --peligro: #f08a5d; --peligro-sv: #3a2219; --just: #2e2714; --b-sv: #4a3a17; --b-svt: #f3d9a6;
+  --aviso: #3a2c12; --aviso-t: #f3d9a6; --peligro: #f08a5d; --peligro-sv: #3a2219; --just: #2e2714; --b-sv: #4a3a17; --b-svt: #f3d9a6; --tarde: #8f74cc;
   --sombra: 0 12px 40px rgba(0, 0, 0, .5); color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -132,7 +132,7 @@ select.inp { padding-right: 8px; }
 .seg { display: inline-flex; border: 1px solid var(--linea2); border-radius: 10px; overflow: hidden; background: var(--sup); flex-shrink: 0; }
 .seg button { min-height: 44px; min-width: 50px; border: 0; background: transparent; font-weight: 700; color: var(--suave); padding: 0 10px; }
 .seg button + button { border-left: 1px solid var(--linea); }
-.seg .on-P { background: var(--acento); color: #fff; } .seg .on-F { background: #c2410c; color: #fff; } .seg .on-J { background: #e8a33a; color: #17221f; }
+.seg .on-P { background: var(--acento); color: #fff; } .seg .on-T { background: var(--tarde); color: #fff; } .seg .on-F { background: #c2410c; color: #fff; } .seg .on-J { background: #e8a33a; color: #17221f; }
 .seg .on-S { background: var(--a); color: #fff; } .seg .on-N { background: var(--c); color: #fff; }
 .seg .on-AD { background: var(--ad); color: #fff; } .seg .on-A { background: var(--a); color: #fff; } .seg .on-B { background: var(--b); color: #17221f; } .seg .on-C { background: var(--c); color: #fff; }
 .seg.mini button { min-height: 40px; min-width: 40px; font-size: 14px; }
@@ -231,7 +231,8 @@ button.fld { cursor: pointer; } button.fld:hover { border-color: var(--acento); 
 
 /* ---------- Asistencia ---------- */
 .asis-row { display: grid; grid-template-columns: 34px minmax(160px, 1fr) auto auto; gap: 12px; align-items: center; padding: 8px 16px; border-bottom: 1px solid var(--linea); background: var(--sup); }
-.asis-row.F { background: var(--peligro-sv); } .asis-row.J { background: var(--just); } .asis-row.cC { box-shadow: inset 4px 0 0 #c2410c; }
+.asis-row.F { background: var(--peligro-sv); } .asis-row.T { box-shadow: inset 4px 0 0 var(--tarde); }
+.asis-row .fn small.t { color: var(--tarde); } .asis-row.J { background: var(--just); } .asis-row.cC { box-shadow: inset 4px 0 0 #c2410c; }
 .asis-row .fn small { display: block; font-size: 12px; font-weight: 700; color: var(--peligro); }
 .asis-row .fn small.j { color: var(--aviso-t); }
 .cond-g { display: flex; gap: 6px; align-items: center; }
@@ -333,7 +334,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '2.1.0';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -536,7 +537,7 @@ function setCfg(cambios) { dbPut('cfg', 'general', Object.assign({}, dbGet('cfg'
 /* ---------- Bimestres ---------- */
 function bimestres() {
   const out = [];
-  for (let n = 1; n <= 4; n++) { const b = dbGet('bim', String(n)); out.push({ n, inicio: b && b.inicio || '', fin: b && b.fin || '' }); }
+  for (let n = 1; n <= 4; n++) { const b = dbGet('bim', String(n)); out.push({ n, inicio: b && b.inicio || '', fin: b && b.fin || '', sugerido: !!(b && b.sugerido) }); }
   return out;
 }
 function bimestreDe(fecha) {
@@ -610,17 +611,24 @@ function temasDeAula(aulaId, bim) {
   return temas(t => String(t.grado) === String(a.grado) && (!bim || Number(t.bim) === Number(bim)));
 }
 function temaUsado(aulaId, temaId) { return sesiones(s => s.aulaId === aulaId && s.temaId === temaId).length > 0; }
-function bancoCriterios(capId) {
-  const set = new Map();
-  dbList('crit').filter(c => c.cap === capId).forEach(c => set.set(norm(c.texto), c.texto));
-  temas(t => t.cap === capId).forEach(t => (t.crit || []).forEach(x => set.set(norm(x), x)));
-  sesiones(s => s.cap === capId).forEach(s => (s.crit || []).forEach(x => set.set(norm(x), x)));
+/* Capacidad de cada criterio: un tema o ficha puede evaluar varias capacidades */
+function capDe(s, i) { return (s.critCap && s.critCap[i]) || s.cap; }
+function capsDe(s) { return Array.from(new Set((s.crit || []).map((_, i) => capDe(s, i)).filter(Boolean))); }
+function bancoCriterios(capId, grado) {
+  const set = new Map(); const g = grado == null ? null : String(grado);
+  const okG = x => g == null || !x || String(x) === g;
+  // primero los usados en el temario y en fichas de este grado, luego el banco
+  temas(t => okG(t.grado)).forEach(t => (t.crit || []).forEach((x, i) => { if (capDe(t, i) === capId) set.set(norm(x), x); }));
+  sesiones(s => !g || (dbGet('aula', s.aulaId) || {}).grado == g).forEach(s => (s.crit || []).forEach((x, i) => { if (capDe(s, i) === capId) set.set(norm(x), x); }));
+  dbList('crit').filter(c => c.cap === capId && okG(c.grado)).forEach(c => { if (!set.has(norm(c.texto))) set.set(norm(c.texto), c.texto); });
   return Array.from(set.values());
 }
-function agregarCriterioBanco(capId, texto) {
-  texto = String(texto || '').trim(); if (!texto) return;
-  if (bancoCriterios(capId).some(x => norm(x) === norm(texto))) return;
-  dbPut('crit', uid(), { cap: capId, comp: CAP[capId] ? CAP[capId].comp : '', texto });
+function agregarCriterioBanco(capId, texto, grado) {
+  texto = String(texto || '').trim(); if (!texto || !CAP[capId]) return false;
+  const g = grado == null ? '' : String(grado);
+  if (dbList('crit').some(c => c.cap === capId && norm(c.texto) === norm(texto) && String(c.grado || '') === g)) return false;
+  dbPut('crit', uid(), { cap: capId, comp: CAP[capId].comp, texto, grado: g });
+  return true;
 }
 
 /* ---------- Sesiones (fichas de cotejo y rúbricas) ---------- */
@@ -661,15 +669,16 @@ function calcularNivelClase(ses, estId, extra) {
   if (!estMatriculado(e, ses.fecha)) return { lv: null, estado: 'nomat' };
   const a = asistencia(ses.aulaId, ses.fecha, estId);
   const n = (extra && extra.nota) || nota(ses.id, estId);
-  if (a.e === 'F') return { lv: 'C', estado: 'falta', base: 'C' };
-  if (a.e === 'J' && !n.rec) return { lv: null, estado: 'justificada' };
-  const valores = [];
+  if (a.e === 'F') { const pc = {}; capsDe(ses).forEach(k => pc[k] = 'C'); return { lv: 'C', estado: 'falta', base: 'C', porCap: pc }; }
+  if (a.e === 'J' && !n.rec) return { lv: null, estado: 'justificada', porCap: {} };
+  const valores = []; const porCapV = {};
   (ses.crit || []).forEach((_, i) => {
-    const v = n.c[i];
-    if (ses.tipo === 'cotejo') { if (v === 'S') valores.push(3); else if (v === 'N') valores.push(1); }
-    else if (NIVEL_NUM[v]) valores.push(NIVEL_NUM[v]);
+    const v = n.c[i]; let x = null;
+    if (ses.tipo === 'cotejo') { if (v === 'S') x = 3; else if (v === 'N') x = 1; }
+    else if (NIVEL_NUM[v]) x = NIVEL_NUM[v];
+    if (x != null) { valores.push(x); const k = capDe(ses, i); (porCapV[k] = porCapV[k] || []).push(x); }
   });
-  if (!valores.length) return { lv: null, estado: 'pendiente', parcial: false };
+  if (!valores.length) return { lv: null, estado: 'pendiente', parcial: false, porCap: {} };
   const completo = valores.length === (ses.crit || []).length;
   const base = numANivel(valores.reduce((x, y) => x + y, 0) / valores.length);
   let lv = base; const motivos = [];
@@ -677,14 +686,17 @@ function calcularNivelClase(ses, estId, extra) {
   const cuenta = l => p.filter(x => x === l).length;
   if ((base === 'A' || base === 'AD') && tot >= Number(c.minAD) && cuenta('AD') > tot / 2 && base !== 'AD') { lv = 'AD'; motivos.push('participación destacada'); }
   if ((base === 'B' || base === 'C') && tot >= Number(c.bastante) && (cuenta('AD') + cuenta('A') + cuenta('B')) > tot / 2 && base === 'C') { lv = 'B'; motivos.push('participó bastante'); }
+  const porCap = {};
+  Object.keys(porCapV).forEach(k => porCap[k] = numANivel(porCapV[k].reduce((x, y) => x + y, 0) / porCapV[k].length));
   if (a.cond === 'C') {
     const aula = dbGet('aula', ses.aulaId) || {};
     const leve = (c.gradosLeves || []).map(String).includes(String(aula.grado));
+    const baja = l => leve ? ({ AD: 'B', A: 'B', B: 'C', C: 'C' })[l] : 'C';
     const antes = lv;
-    lv = leve ? ({ AD: 'B', A: 'B', B: 'C', C: 'C' })[lv] : 'C';
+    lv = baja(lv); Object.keys(porCap).forEach(k => porCap[k] = baja(porCap[k]));
     motivos.push('conducta C (' + antes + '→' + lv + ')');
   }
-  return { lv, base, estado: completo ? 'ok' : 'parcial', motivos, conducta: a.cond };
+  return { lv, base, estado: completo ? 'ok' : 'parcial', motivos, conducta: a.cond, porCap };
 }
 
 /* ---------- Consolidados ---------- */
@@ -700,8 +712,8 @@ function consolidarAula(aulaId, bim) {
       const n = Object.assign({ c: [], p: [], obs: '', rec: false }, notas.get(s.id + '|' + e.id) || {});
       const res = calcularNivelClase(s, e.id, { est: e, nota: n });
       r.clases[s.id] = res;
+      Object.keys(res.porCap || {}).forEach(k => { if (res.porCap[k]) (acumCap[k] = acumCap[k] || []).push(res.porCap[k]); });
       if (res.lv) {
-        (acumCap[s.cap] = acumCap[s.cap] || []).push(res.lv);
         (acumComp[s.comp] = acumComp[s.comp] || []).push(res.lv);
         if (s.temaId) { const k = s.temaId + '|' + s.comp; (acumTema[k] = acumTema[k] || []).push(res.lv); }
       }
@@ -722,12 +734,13 @@ function estadisticaCriterios(cons) {
   const m = new Map();
   cons.ses.forEach(s => {
     (s.crit || []).forEach((txt, i) => {
-      const k = s.cap + '|' + norm(txt);
-      if (!m.has(k)) m.set(k, { texto: txt, cap: s.cap, comp: s.comp, AD: 0, A: 0, B: 0, C: 0, total: 0 });
+      const cap = capDe(s, i);
+      const k = cap + '|' + norm(txt);
+      if (!m.has(k)) m.set(k, { texto: txt, cap, comp: CAP[cap] ? CAP[cap].comp : s.comp, AD: 0, A: 0, B: 0, C: 0, total: 0 });
       const o = m.get(k);
       cons.ests.forEach(e => {
         const n = cons.notas.get(s.id + '|' + e.id); if (!n) return;
-        const a = asistencia(s.aulaId, s.fecha, e.id); if (a.e !== 'P' && !(a.e === 'J' && n.rec)) return;
+        const a = asistencia(s.aulaId, s.fecha, e.id); if (a.e === 'F' || (a.e === 'J' && !n.rec)) return;
         const v = n.c[i];
         const lv = s.tipo === 'cotejo' ? (v === 'S' ? 'A' : v === 'N' ? 'C' : null) : (NIVEL_NUM[v] ? v : null);
         if (lv) { o[lv]++; o.total++; }
@@ -747,7 +760,7 @@ function alertasIntervencion(cons) {
     const r = cons.porEst[e.id];
     // C seguidas en una misma capacidad
     const porCap = {};
-    cons.ses.forEach(s => { const x = r.clases[s.id]; if (x && x.lv) (porCap[s.cap] = porCap[s.cap] || []).push(x.lv); });
+    cons.ses.forEach(s => { const x = r.clases[s.id]; if (x && x.porCap) Object.keys(x.porCap).forEach(k => (porCap[k] = porCap[k] || []).push(x.porCap[k])); });
     Object.keys(porCap).forEach(cap => {
       const l = porCap[cap]; let racha = 0, max = 0;
       l.forEach(v => { racha = (v === 'C') ? racha + 1 : 0; max = Math.max(max, racha); });
@@ -820,6 +833,12 @@ async function verificarPatron() {
    ===================================================================== */
 const SYNC = { enCurso: false, ultimo: null, error: null, timer: null };
 function syncConfig() { return DB.meta.sync || null; }
+/* Acepta el enlace aunque se pegue junto con otro texto */
+function limpiarEnlace(t) {
+  t = String(t || '').trim();
+  const m = t.match(/https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec/);
+  return m ? m[0] : t.split(/\s+/).find(x => /^https:\/\//.test(x)) || t;
+}
 function syncEstado() {
   const c = syncConfig();
   const pend = DB.sucios.size + (DB.meta.colaCorreo || []).length;
@@ -1040,12 +1059,13 @@ const XL = {
     descargarBlob(await XL.archivo(hojas), nombre);
   },
   /* Lee la primera hoja de un Excel (.xlsx) o un .csv y devuelve filas de texto */
-  async leer(file) {
+  async leer(file, hojaPreferida) {
     if (/\.csv$/i.test(file.name)) { const t = await file.text(); const sep = (t.split('\n')[0].match(/;/g) || []).length > (t.split('\n')[0].match(/,/g) || []).length ? ';' : ','; return t.split(/\r?\n/).map(l => l.split(sep).map(x => x.replace(/^"|"$/g, '').trim())); }
     const z = await JSZip.loadAsync(await file.arrayBuffer());
     const dp = new DOMParser(); const xml = async p => { const f = z.file(p); return f ? dp.parseFromString(await f.async('string'), 'application/xml') : null; };
     const wb = await xml('xl/workbook.xml'); const rels = await xml('xl/_rels/workbook.xml.rels');
-    const hoja1 = wb.getElementsByTagName('sheet')[0]; const rid = hoja1.getAttribute('r:id') || hoja1.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+    const hojas = Array.from(wb.getElementsByTagName('sheet'));
+    const hoja1 = (hojaPreferida && hojas.find(h => norm(h.getAttribute('name')) === norm(hojaPreferida))) || hojas[0]; const rid = hoja1.getAttribute('r:id') || hoja1.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
     let destino = 'worksheets/sheet1.xml'; Array.from(rels.getElementsByTagName('Relationship')).forEach(r => { if (r.getAttribute('Id') === rid) destino = r.getAttribute('Target'); });
     const ruta = destino.startsWith('/') ? destino.slice(1) : 'xl/' + destino.replace(/^\.\//, '');
     const ss = await xml('xl/sharedStrings.xml'); const comp = ss ? Array.from(ss.getElementsByTagName('si')).map(si => Array.from(si.getElementsByTagName('t')).map(t => t.textContent).join('')) : [];
@@ -1100,14 +1120,14 @@ function exportarRegistroExcel(aulaId, bim) {
   const est = estadisticaCriterios(cons).sort((a, b) => b.bajo - a.bajo);
   const fe = [['Competencia', 'Capacidad', 'Criterio', 'AD', 'A', 'B', 'C', 'Total', '% en B o C']].concat(est.map(o => [COMP[o.comp].corto, CAP[o.cap].nombre, o.texto, o.AD, o.A, o.B, o.C, o.total, Math.round(o.bajo * 100) + '%']));
   hojas.push({ nombre: 'Estadística criterios', filas: fe, anchos: [22, 40, 50, 6, 6, 6, 6, 8, 12], fijas: 3 });
-  const fa = [['N.°', 'Apellidos y nombres', 'Presente', 'Falta', 'Justificada', 'Conducta A', 'Conducta B', 'Conducta C']];
+  const fa = [['N.°', 'Apellidos y nombres', 'Presente', 'Tardanza', 'Falta', 'Justificada', 'Conducta A', 'Conducta B', 'Conducta C']];
   cons.ests.forEach((e, i) => {
     const l = registrosAsistencia(a => a.aulaId === aulaId && a.estId === e.id && bimestreDe(a.fecha) === bim);
     const fechas = Array.from(new Set(dbList('asisdia').filter(d => d.aulaId === aulaId && bimestreDe(d.fecha) === bim).map(d => d.fecha)));
-    const F = l.filter(a => a.e === 'F').length, J = l.filter(a => a.e === 'J').length;
-    fa.push([i + 1, nombreEst(e), fechas.length - F - J, F, J, l.filter(a => a.cond === 'A').length, l.filter(a => a.cond === 'B').length, l.filter(a => a.cond === 'C').length]);
+    const F = l.filter(a => a.e === 'F').length, J = l.filter(a => a.e === 'J').length, T = l.filter(a => a.e === 'T').length;
+    fa.push([i + 1, nombreEst(e), fechas.length - F - J - T, T, F, J, l.filter(a => a.cond === 'A').length, l.filter(a => a.cond === 'B').length, l.filter(a => a.cond === 'C').length]);
   });
-  hojas.push({ nombre: 'Asistencia y conducta', filas: fa, anchos: [5, 34, 10, 8, 11, 11, 11, 11] });
+  hojas.push({ nombre: 'Asistencia y conducta', filas: fa, anchos: [5, 34, 10, 10, 8, 11, 11, 11, 11] });
   return XL.descargar(hojas, 'Registro-' + aulaCodigo(aulaId) + '-Bimestre-' + romano(bim) + '-' + hoy() + '.xlsx');
 }
 function filasSiagie(aulaId, bim) {
@@ -1325,7 +1345,7 @@ ACC.crearCuenta = async () => {
   location.hash = '#/ajustes/inicio'; render();
 };
 ACC.conectarRespaldo = async () => {
-  const url = document.getElementById('curl').value.trim(), clave = document.getElementById('cclave').value;
+  const url = limpiarEnlace(document.getElementById('curl').value), clave = document.getElementById('cclave').value;
   DB.meta.sync = { url, clave }; DB.meta.since = 0; guardarMeta();
   ING.error = ''; toast('Conectando…');
   const r = await sincronizar();
@@ -1410,15 +1430,15 @@ VISTAS.aula = (p) => {
   if (sub === 'registros') return vistaRegistros(aulaId, p[3] || 'general');
   const f = hoy(); const bim = bimestreDe(f);
   const ests = estudiantes(aulaId).filter(e => estMatriculado(e, f));
-  let P = 0, F = 0, J = 0, C = 0;
-  ests.forEach(e => { const x = asistencia(aulaId, f, e.id); if (x.e === 'F') F++; else if (x.e === 'J') J++; else P++; if (x.cond === 'C') C++; });
+  let P = 0, F = 0, J = 0, T = 0, C = 0;
+  ests.forEach(e => { const x = asistencia(aulaId, f, e.id); if (x.e === 'F') F++; else if (x.e === 'J') J++; else if (x.e === 'T') T++; else P++; if (x.cond === 'C') C++; });
   const sesHoy = sesionesAula(aulaId, bim).filter(s => s.fecha === f);
   const cits = citaciones(c => c.aulaId === aulaId && c.fecha === f);
   const tomada = asistenciaTomada(aulaId, f);
   const m = (h, k, t, d, cls) => '<a class="mosaico ' + (cls || '') + '" href="' + h + '" style="text-decoration:none"><span class="k">' + k + '</span><span><b>' + t + '</b><span class="d">' + d + '</span></span></a>';
   return cabecera({ atras: '#/', titulo: aulaNombre(aulaId), sub: ests.length + ' estudiantes · ' + cfg().area }) +
     '<main class="pag"><div class="tarjeta fila" style="gap:24px"><div class="col" style="gap:2px"><span class="muted peq">Hoy</span><b style="font-size:20px">' + esc(fechaMedia(f)) + (sesHoy.length ? ' · Clase ' + numeroClase(sesHoy[0]) : '') + '</b></div>' +
-    '<div class="fila" style="gap:18px;font-size:17px"><span><b style="color:var(--acento)">' + P + '</b> presentes</span><span><b style="color:var(--peligro)">' + F + '</b> faltas</span><span><b style="color:var(--aviso-t)">' + J + '</b> justificadas</span><span><b style="color:var(--peligro)">' + C + '</b> conducta C</span></div>' +
+    '<div class="fila" style="gap:18px;font-size:17px"><span><b style="color:var(--acento)">' + P + '</b> presentes</span><span><b style="color:var(--tarde)">' + T + '</b> tardanzas</span><span><b style="color:var(--peligro)">' + F + '</b> faltas</span><span><b style="color:var(--aviso-t)">' + J + '</b> justificadas</span><span><b style="color:var(--peligro)">' + C + '</b> conducta C</span></div>' +
     '<div class="esp" style="flex:1"></div><span class="etiqueta ' + (tomada ? 'verde' : '') + '">' + (tomada ? 'Asistencia tomada' : 'Asistencia sin tomar') + '</span></div>' +
     '<div class="grid-3">' +
     m('#/aula/' + aulaId + '/asistencia', 'Paso 1', 'Asistencia', 'Controla quién aparece en las fichas de hoy. Conducta y citaciones.', 'prim') +
@@ -1437,9 +1457,9 @@ function vistaAsistencia(aulaId) {
   const filas = ests.map((e, i) => {
     const a = asistencia(aulaId, f, e.id);
     const cit = dbGet('cit', asisClave(aulaId, f, e.id));
-    const nota = a.e === 'F' ? '<small>Falta · no aparece en las fichas de este día</small>' : a.e === 'J' ? '<small class="j">Justificada · aparece bloqueado, se puede recuperar la nota</small>' : '';
+    const nota = a.e === 'F' ? '<small>Falta · no aparece en las fichas de este día</small>' : a.e === 'J' ? '<small class="j">Justificada · aparece bloqueado, se puede recuperar la nota</small>' : a.e === 'T' ? '<small class="t">Tardanza · se evalúa normalmente</small>' : '';
     const notaC = a.cond === 'C' ? '<small>Conducta C' + (cit ? ' · citación para el ' + fechaMedia(cit.cita) + (cit.enviada ? ' · enviada' : '') : '') + '</small>' : '';
-    const segA = ['P', 'F', 'J'].map(k => '<button class="' + (a.e === k ? 'on-' + k : '') + '" data-act="marcarAsis" data-aula="' + aulaId + '" data-f="' + f + '" data-est="' + e.id + '" data-v="' + k + '" aria-pressed="' + (a.e === k) + '" aria-label="' + ({ P: 'Presente', F: 'Falta', J: 'Justificada' })[k] + '">' + k + '</button>').join('');
+    const segA = ['P', 'T', 'F', 'J'].map(k => '<button class="' + (a.e === k ? 'on-' + k : '') + '" data-act="marcarAsis" data-aula="' + aulaId + '" data-f="' + f + '" data-est="' + e.id + '" data-v="' + k + '" aria-pressed="' + (a.e === k) + '" aria-label="' + ({ P: 'Presente', T: 'Tardanza', F: 'Falta', J: 'Justificada' })[k] + '">' + k + '</button>').join('');
     const segC = ['A', 'B', 'C'].map(k => '<button class="' + (a.cond === k ? 'on-' + k : '') + '" data-act="marcarCond" data-aula="' + aulaId + '" data-f="' + f + '" data-est="' + e.id + '" data-v="' + k + '" aria-pressed="' + (a.cond === k) + '" aria-label="Conducta ' + k + '">' + k + '</button>').join('');
     return '<div class="asis-row ' + a.e + (a.cond === 'C' ? ' cC' : '') + '"><span class="num muted">' + (i + 1) + '</span><span class="fn"><b style="font-size:17px">' + esc(nombreEst(e)) + '</b>' + nota + notaC + '</span>' +
       '<span class="fila-ctrl"><span class="seg" role="group" aria-label="Asistencia">' + segA + '</span></span>' +
@@ -1448,6 +1468,7 @@ function vistaAsistencia(aulaId) {
   return cabecera({ atras: '#/aula/' + aulaId, titulo: aulaNombre(aulaId) + ' · Asistencia', der: '<label class="oculto" for="fasis">Fecha</label><input id="fasis" type="date" class="inp" style="width:auto;min-height:44px;font-size:16px" value="' + f + '" max="' + hoy() + '" data-cambio="fechaAsis" data-aula="' + aulaId + '">' }) +
     '<div class="sub"><div class="fila" style="padding:10px 16px;max-width:1400px;margin:0 auto;font-size:14px;gap:18px">' +
     '<span class="fila" style="gap:6px"><span class="lv lv-A" style="min-width:20px;height:16px;background:var(--acento)"></span>P presente: aparece en fichas</span>' +
+    '<span class="fila" style="gap:6px"><span class="lv" style="min-width:20px;height:16px;background:var(--tarde)"></span>T tardanza: aparece y se evalúa</span>' +
     '<span class="fila" style="gap:6px"><span class="lv lv-C" style="min-width:20px;height:16px"></span>F falta: no aparece ese día (cuenta C)</span>' +
     '<span class="fila" style="gap:6px"><span class="lv lv-B" style="min-width:20px;height:16px"></span>J justificada: bloqueado</span>' +
     '<span class="muted">Conducta C: baja el logro del día y genera citación</span><span style="flex:1"></span>' +
@@ -1557,9 +1578,9 @@ VISTAS.ses = (p) => {
     fld('editarProducto', 'Producto de la clase', s.producto, 'Se carga con el tema') + '</div><div class="g2">' +
     fld('editarProposito', 'Propósito', s.proposito, 'Se carga con el tema') +
     fld('elegirComp', 'Competencia', s.comp ? COMP[s.comp].nombre : '', 'Elegir competencia…', true) +
-    fld('elegirCap', 'Capacidad', s.cap ? CAP[s.cap].nombre : '', 'Elegir capacidad…', true) + '</div>' +
+    fld('elegirCap', capsDe(s).length > 1 ? 'Capacidades' : 'Capacidad', capsDe(s).length > 1 ? capsDe(s).map(k => CAP[k].nombre).join(' · ') : (s.cap ? CAP[s.cap].nombre : ''), 'Elegir capacidad…', true) + '</div>' +
     '<div class="chips"><span class="fld" style="min-height:0;border:0;background:none;padding:0"><span class="fl">Criterios</span></span>' +
-    (s.crit || []).map((c, i) => '<span class="chip"><b>C' + (i + 1) + '</b> ' + esc(c) + '</span>').join('') +
+    (s.crit || []).map((c, i) => '<span class="chip" title="' + esc(CAP[capDe(s, i)] ? CAP[capDe(s, i)].nombre : '') + '"><b>C' + (i + 1) + '</b> ' + esc(c) + (capsDe(s).length > 1 && CAP[capDe(s, i)] ? ' <span class="muted">· ' + esc(CAP[capDe(s, i)].corto) + '</span>' : '') + '</span>').join('') +
     '<button class="btn chico punteado" data-act="elegirCrit" data-ses="' + s.id + '">' + ((s.crit || []).length ? 'Cambiar criterios' : '+ Elegir o escribir criterios') + '</button></div></section>';
   let cuerpo = '';
   if (!s.comp || !s.cap || !(s.crit || []).length) {
@@ -1576,7 +1597,7 @@ VISTAS.ses = (p) => {
       const a = asistencia(s.aulaId, s.fecha, e.id); const n = nota(s.id, e.id);
       const res = calcularNivelClase(s, e.id, { est: e, nota: n });
       const bloqueado = a.e === 'J' && !n.rec;
-      const tag = a.e === 'J' ? (n.rec ? '<small>Justificada · nota recuperada</small>' : '<small>Justificada · bloqueada</small>') : '';
+      const tag = a.e === 'J' ? (n.rec ? '<small>Justificada · nota recuperada</small>' : '<small>Justificada · bloqueada</small>') : a.e === 'T' ? '<small style="color:var(--tarde)">Tardanza</small>' : '';
       const tagC = a.cond === 'C' ? '<small class="rojo">Conducta C hoy · el logro baja</small>' : '';
       const crits = s.crit.map((t, i) => {
         const v = n.c[i];
@@ -1622,7 +1643,7 @@ ACC.elegirTema = d => {
     const ts = lista.filter(t => Number(t.bim) === b); if (!ts.length) return '';
     return '<div class="etq muted" style="padding:6px 12px 0">' + romano(b) + ' Bimestre' + (b === s.bim ? ' · actual' : '') + '</div>' + ts.map(t => {
       const hecho = usoTema[t.id];
-      return '<button class="opcion' + (hecho ? ' hecho' : '') + (t.id === s.temaId ? ' sel' : '') + '" data-act="ponerTema" data-ses="' + s.id + '" data-tema="' + t.id + '"><span class="pt"></span><span>' + esc(t.nombre) + '</span><span class="nota-op">' + (t.id === s.temaId ? 'Seleccionado' : hecho ? 'Hecho · clase ' + hecho : 'Disponible') + '</span></button>';
+      return '<button class="opcion' + (hecho ? ' hecho' : '') + (t.id === s.temaId ? ' sel' : '') + '" data-act="ponerTema" data-ses="' + s.id + '" data-tema="' + t.id + '"><span class="pt"></span><span>' + (t.orden && t.orden < 100 ? t.orden + '. ' : '') + esc(t.nombre) + '</span><span class="nota-op">' + (t.id === s.temaId ? 'Seleccionado' : hecho ? 'Hecho · clase ' + hecho : 'Disponible') + '</span></button>';
     }).join('');
   }).join('');
   abrirModal({ titulo: 'Temas de ' + aulaNombre(s.aulaId), cuerpo: (grupos || '<div class="aviso">No hay temas para ' + dbGet('aula', s.aulaId).grado + '.° grado. Crea uno aquí o en Ajustes › Temario.</div>') + '<p class="muted peq" style="margin:0">Los temas en gris ya se desarrollaron en esta sección.</p>',
@@ -1633,7 +1654,7 @@ ACC.ponerTema = d => {
   const tieneNotas = notasDeSesion(s.id).some(n => (n.c || []).some(Boolean));
   const aplicar = () => {
     s.temaId = d.tema; s.proposito = t.proposito || ''; s.producto = t.producto || ''; s.comp = t.comp || ''; s.cap = t.cap || '';
-    const nuevos = (t.crit || []).slice(); if (nuevos.length) cambiarCriterios(s, nuevos); else guardarSes(s);
+    const nuevos = (t.crit || []).slice(); if (nuevos.length) cambiarCriterios(s, nuevos, nuevos.map((_, i) => capDe(t, i))); else { s.critCap = []; guardarSes(s); }
     cerrarModal(); render({ mantener: true });
   };
   if (tieneNotas && s.temaId && s.temaId !== d.tema) confirmar('Cambiar de tema', 'Ya hay calificaciones en esta ficha. Al cambiar de tema se cargan sus criterios; las marcas de criterios que se mantengan con el mismo texto se conservan.', 'Cambiar tema', aplicar);
@@ -1649,30 +1670,45 @@ ACC.elegirCap = d => {
   const t = s.temaId ? dbGet('tema', s.temaId) : null; const sug = t && t.comp === s.comp ? t.cap : null;
   abrirModal({ titulo: 'Capacidades · ' + COMP[s.comp].corto, cuerpo: COMP[s.comp].caps.map(k => '<button class="opcion' + (sug === k.id ? ' sug' : '') + (s.cap === k.id ? ' sel' : '') + '" data-act="ponerCap" data-ses="' + s.id + '" data-c="' + k.id + '"><span class="pt"></span><span>' + esc(k.nombre) + '</span>' + (sug === k.id ? '<span class="nota-op">Sugerida para el tema</span>' : '') + '</button>').join('') });
 };
-ACC.ponerCap = d => { const s = sesActual(d.ses); s.cap = d.c; guardarSes(s); cerrarModal(); render({ mantener: true }); if (!(s.crit || []).length) ACC.elegirCrit({ ses: s.id }); };
-function cambiarCriterios(s, nuevos) {
+ACC.ponerCap = d => { const s = sesActual(d.ses); if (capsDe(s).length <= 1) s.critCap = (s.crit || []).map(() => d.c); s.cap = d.c; guardarSes(s); cerrarModal(); render({ mantener: true }); if (!(s.crit || []).length) ACC.elegirCrit({ ses: s.id }); };
+function cambiarCriterios(s, nuevos, caps) {
   const viejos = s.crit || [];
   const mapa = nuevos.map(t => viejos.findIndex(v => norm(v) === norm(t)));
   notasDeSesion(s.id).forEach(n => { setNota(s.id, n.estId, { c: mapa.map(i => i >= 0 ? (n.c || [])[i] || null : null) }); });
-  s.crit = nuevos; guardarSes(s);
+  s.critCap = nuevos.map((t, j) => (caps && caps[j]) || (mapa[j] >= 0 ? capDe(s, mapa[j]) : s.cap));
+  s.crit = nuevos;
+  // la capacidad principal es la más frecuente entre los criterios
+  const cuenta = {}; s.critCap.forEach(k => cuenta[k] = (cuenta[k] || 0) + 1);
+  const principal = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0];
+  if (principal) { s.cap = principal; s.comp = CAP[principal].comp; }
+  guardarSes(s);
 }
 ACC.elegirCrit = d => {
   const s = sesActual(d.ses); if (!s.cap) { ACC.elegirCap(d); return; }
-  UI._crit = { ses: s.id, sel: (s.crit || []).slice() };
+  const capMap = {}; (s.crit || []).forEach((t, i) => capMap[t] = capDe(s, i));
+  UI._crit = { ses: s.id, sel: (s.crit || []).slice(), capMap, vista: s.cap };
   pintarCriterios();
 };
 function pintarCriterios() {
-  const x = UI._crit; const s = sesActual(x.ses);
-  const banco = bancoCriterios(s.cap); const todos = Array.from(new Set(x.sel.concat(banco)));
-  abrirModal({ titulo: 'Criterios · ' + CAP[s.cap].nombre, ancho: true, cuerpo:
-    '<p class="muted peq" style="margin:0">Toca para elegir (en el orden que tocas). Máximo 8.</p>' +
-    (todos.length ? todos.map(t => { const i = x.sel.indexOf(t); return '<button class="opcion' + (i >= 0 ? ' sel' : '') + '" data-act="togCrit" data-t="' + esc(t) + '"><span class="check">' + (i >= 0 ? (i + 1) : '') + '</span><span>' + esc(t) + '</span></button>'; }).join('') : '<div class="aviso">Aún no hay criterios guardados para esta capacidad. Escríbelos abajo.</div>') +
+  const x = UI._crit; const s = sesActual(x.ses); const grado = (dbGet('aula', s.aulaId) || {}).grado;
+  const comp = CAP[x.vista].comp;
+  const banco = bancoCriterios(x.vista, grado);
+  const elegidos = x.sel.filter(t => x.capMap[t] !== x.vista);
+  const lista = Array.from(new Set(x.sel.filter(t => x.capMap[t] === x.vista).concat(banco)));
+  const fila = t => { const i = x.sel.indexOf(t); return '<button class="opcion' + (i >= 0 ? ' sel' : '') + '" data-act="togCrit" data-t="' + esc(t) + '"><span class="check">' + (i >= 0 ? (i + 1) : '') + '</span><span>' + esc(t) + '</span>' + (x.capMap[t] && x.capMap[t] !== x.vista ? '<span class="nota-op">' + esc(CAP[x.capMap[t]].corto) + '</span>' : '') + '</button>'; };
+  abrirModal({ titulo: 'Criterios de la ficha', ancho: true, cuerpo:
+    '<p class="muted peq" style="margin:0">Toca para elegir, en el orden que tocas (máximo 8). Puedes combinar capacidades: cambia de capacidad aquí abajo.</p>' +
+    '<div class="chips">' + COMP[comp].caps.map(k => '<button class="btn chico' + (k.id === x.vista ? ' prim' : '') + '" data-act="vistaCap" data-c="' + k.id + '">' + esc(k.nombre.split(' ').slice(0, 3).join(' ')) + '</button>').join('') + '</div>' +
+    '<div class="etq">' + esc(CAP[x.vista].nombre) + '</div>' +
+    (lista.length ? lista.map(fila).join('') : '<div class="aviso">Aún no hay criterios para esta capacidad en ' + esc(grado) + '.° grado. Escríbelos abajo o importa tu banco de criterios en Ajustes › Temario.</div>') +
+    (elegidos.length ? '<div class="etq" style="margin-top:6px">Ya elegidos de otras capacidades</div>' + elegidos.map(fila).join('') : '') +
     '<form class="fila" data-envio="nuevoCrit" style="flex-wrap:nowrap"><label class="oculto" for="ncrit">Nuevo criterio</label><input id="ncrit" class="inp" placeholder="Escribir un criterio nuevo…"><button class="btn">Agregar</button></form>',
     pie: '<button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarCrit">Usar ' + x.sel.length + ' criterio' + (x.sel.length === 1 ? '' : 's') + '</button>' });
 }
-ACC.togCrit = d => { const x = UI._crit; const i = x.sel.indexOf(d.t); if (i >= 0) x.sel.splice(i, 1); else if (x.sel.length < 8) x.sel.push(d.t); pintarCriterios(); };
-ACC.nuevoCrit = () => { const v = document.getElementById('ncrit').value.trim(); if (!v) return; const x = UI._crit; const s = sesActual(x.ses); agregarCriterioBanco(s.cap, v); if (x.sel.length < 8 && !x.sel.includes(v)) x.sel.push(v); pintarCriterios(); };
-ACC.guardarCrit = () => { const x = UI._crit; const s = sesActual(x.ses); if (!x.sel.length) { toast('Elige al menos un criterio.'); return; } cambiarCriterios(s, x.sel.slice()); cerrarModal(); render({ mantener: true }); };
+ACC.vistaCap = d => { UI._crit.vista = d.c; pintarCriterios(); };
+ACC.togCrit = d => { const x = UI._crit; const i = x.sel.indexOf(d.t); if (i >= 0) x.sel.splice(i, 1); else if (x.sel.length < 8) { x.sel.push(d.t); if (!x.capMap[d.t]) x.capMap[d.t] = x.vista; } pintarCriterios(); };
+ACC.nuevoCrit = () => { const v = document.getElementById('ncrit').value.trim(); if (!v) return; const x = UI._crit; const s = sesActual(x.ses); agregarCriterioBanco(x.vista, v, (dbGet('aula', s.aulaId) || {}).grado); if (x.sel.length < 8 && !x.sel.includes(v)) { x.sel.push(v); x.capMap[v] = x.vista; } pintarCriterios(); };
+ACC.guardarCrit = () => { const x = UI._crit; const s = sesActual(x.ses); if (!x.sel.length) { toast('Elige al menos un criterio.'); return; } cambiarCriterios(s, x.sel.slice(), x.sel.map(t => x.capMap[t] || x.vista)); cerrarModal(); render({ mantener: true }); };
 ACC.temaRapido = d => { const s = sesActual(d.ses); const a = dbGet('aula', s.aulaId); abrirFormTema({ grado: a.grado, bim: s.bim }, s.id); };
 
 'use strict';
@@ -1724,9 +1760,9 @@ function regGeneral(cons) {
 }
 ACC.verCelda = d => {
   const cons = consolidarAula(d.aula, Number(d.bim)); const r = cons.porEst[d.est]; const e = dbGet('est', d.est);
-  const ses = cons.ses.filter(s => s.cap === d.cap);
+  const ses = cons.ses.filter(s => capsDe(s).includes(d.cap));
   abrirModal({ titulo: nombreEst(e) + ' · ' + CAP[d.cap].nombre, ancho: true, cuerpo: ses.length ? ses.map(s => { const x = r.clases[s.id]; const t = s.temaId && dbGet('tema', s.temaId);
-    return '<div class="item" style="background:var(--sup2)">' + lvHtml(x.lv) + '<span class="tx"><b>Clase ' + numeroClase(s) + ' · ' + fechaMedia(s.fecha) + ' · ' + (s.tipo === 'cotejo' ? 'Ficha de cotejo' : 'Rúbrica') + '</b><span>' + esc(t ? t.nombre : '') + (x.estado === 'falta' ? ' · Falta (C)' : x.estado === 'justificada' ? ' · Justificada (no cuenta)' : x.estado === 'pendiente' ? ' · Sin calificar' : '') + ((x.motivos || []).length ? ' · ' + esc(x.motivos.join(', ')) : '') + '</span></span><a class="btn chico" href="#/ses/' + s.id + '" data-act="cerrarModalIr" data-h="#/ses/' + s.id + '">Abrir</a></div>'; }).join('') : '<div class="aviso">Sin fichas.</div>' });
+    return '<div class="item" style="background:var(--sup2)">' + lvHtml((x.porCap || {})[d.cap] || null) + '<span class="tx"><b>Clase ' + numeroClase(s) + ' · ' + fechaMedia(s.fecha) + ' · ' + (s.tipo === 'cotejo' ? 'Ficha de cotejo' : 'Rúbrica') + '</b><span>' + esc(t ? t.nombre : '') + (x.estado === 'falta' ? ' · Falta (C)' : x.estado === 'justificada' ? ' · Justificada (no cuenta)' : x.estado === 'pendiente' ? ' · Sin calificar' : '') + ((x.motivos || []).length ? ' · ' + esc(x.motivos.join(', ')) : '') + '</span></span><a class="btn chico" href="#/ses/' + s.id + '" data-act="cerrarModalIr" data-h="#/ses/' + s.id + '">Abrir</a></div>'; }).join('') : '<div class="aviso">Sin fichas.</div>' });
 };
 ACC.cerrarModalIr = d => { cerrarModal(); ir(d.h); };
 function buscadorLocal(id, valor, accion, extra) {
@@ -1785,8 +1821,8 @@ function datosAsistencia(aulaId, estId, bim) {
   const e = Object.assign({ id: estId }, dbGet('est', estId));
   const validas = fechas.filter(f => estMatriculado(e, f));
   const regs = validas.map(f => Object.assign({ fecha: f }, asistencia(aulaId, f, estId)));
-  const F = regs.filter(a => a.e === 'F').length, J = regs.filter(a => a.e === 'J').length;
-  return { total: validas.length, P: validas.length - F - J, F, J, regs, pct: validas.length ? Math.round((validas.length - F) * 100 / validas.length) : 100 };
+  const F = regs.filter(a => a.e === 'F').length, J = regs.filter(a => a.e === 'J').length, T = regs.filter(a => a.e === 'T').length;
+  return { total: validas.length, P: validas.length - F - J - T, T, F, J, regs, pct: validas.length ? Math.round((validas.length - F) * 100 / validas.length) : 100 };
 }
 function estadisticasEstudiante(cons, estId) {
   const r = cons.porEst[estId]; const as = datosAsistencia(cons.aulaId, estId, cons.bim);
@@ -1872,8 +1908,8 @@ function estHistorialFichas(e, tipo, bim) {
 function estAsistencia(e, bim) {
   const d = datosAsistencia(e.aulaId, e.id, bim);
   const inc = d.regs.filter(a => a.e !== 'P').reverse();
-  return '<div class="kpis"><div class="kpi"><b>' + d.pct + '%</b><span>Asistencia</span></div><div class="kpi"><b>' + d.P + '</b><span>Presente</span></div><div class="kpi"><b style="color:var(--peligro)">' + d.F + '</b><span>Faltas</span></div><div class="kpi"><b>' + d.J + '</b><span>Justificadas</span></div></div>' +
-    '<div class="tarjeta col"><h2 style="font-size:19px">Faltas y justificaciones</h2>' + (inc.length ? inc.map(a => '<div class="fila" style="border-top:1px solid var(--linea);padding-top:8px"><span class="lv ' + (a.e === 'F' ? 'lv-C' : 'lv-B') + '">' + a.e + '</span><b>' + esc(fechaMedia(a.fecha)) + '</b><span class="muted">' + (a.e === 'F' ? 'Falta' : 'Justificada') + '</span></div>').join('') : '<span class="muted">Sin faltas en este bimestre.</span>') + '</div>';
+  return '<div class="kpis"><div class="kpi"><b>' + d.pct + '%</b><span>Asistencia</span></div><div class="kpi"><b>' + d.P + '</b><span>Presente</span></div><div class="kpi"><b style="color:var(--tarde)">' + d.T + '</b><span>Tardanzas</span></div><div class="kpi"><b style="color:var(--peligro)">' + d.F + '</b><span>Faltas</span></div><div class="kpi"><b>' + d.J + '</b><span>Justificadas</span></div></div>' +
+    '<div class="tarjeta col"><h2 style="font-size:19px">Tardanzas, faltas y justificaciones</h2>' + (inc.length ? inc.map(a => '<div class="fila" style="border-top:1px solid var(--linea);padding-top:8px"><span class="lv ' + (a.e === 'F' ? 'lv-C' : a.e === 'T' ? '' : 'lv-B') + '"' + (a.e === 'T' ? ' style="background:var(--tarde);color:#fff"' : '') + '>' + a.e + '</span><b>' + esc(fechaMedia(a.fecha)) + '</b><span class="muted">' + ({ F: 'Falta', J: 'Justificada', T: 'Tardanza' })[a.e] + '</span></div>').join('') : '<span class="muted">Sin tardanzas ni faltas en este bimestre.</span>') + '</div>';
 }
 function estRegistroPadres(e, bim) {
   const cons = consolidarAula(e.aulaId, bim); const r = cons.porEst[e.id];
@@ -2059,8 +2095,76 @@ AJ.temario = q => {
   const ls = temas(t => String(t.grado) === g && Number(t.bim) === b);
   return '<h1 style="font-size:26px">Temario</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/temario?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/temario?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
     '<div class="lista">' + (ls.length ? ls.map(t => '<div class="item"><span class="tx"><b>' + esc(t.nombre) + '</b><span>' + esc(COMP[t.comp] ? COMP[t.comp].corto : '—') + ' › ' + esc(CAP[t.cap] ? CAP[t.cap].nombre : '—') + ' · ' + (t.crit || []).length + ' criterios</span><span>Producto: ' + esc(t.producto || '—') + '</span></span><button class="btn chico" data-act="editarTema" data-id="' + t.id + '">Editar</button></div>').join('') : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
-    '<button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '" style="align-self:flex-start">+ Agregar tema</button>';
+    '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button></div>' +
+    '<div class="tarjeta col"><h2 style="font-size:19px">Cargar desde Excel</h2>' +
+    '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
+    '<div class="fila"><label class="btn" for="xlsTema" style="cursor:pointer">Importar temario desde Excel</label><input id="xlsTema" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarTemario"><button class="btn" data-act="plantillaTemario">Descargar plantilla Excel</button></div>' +
+    '<p class="muted peq" style="margin:0;line-height:1.5">Banco de criterios: tu archivo con la hoja «Banco_Criterios» (columnas Grado, Competencia, Capacidad y Criterio). Sus criterios aparecen al elegir criterios en cada ficha, según el grado.</p>' +
+    '<div class="fila"><label class="btn" for="xlsBanco" style="cursor:pointer">Importar banco de criterios</label><input id="xlsBanco" type="file" accept=".xlsx,.csv" class="oculto" data-cambio="importarBanco"><span class="muted peq">' + dbList('crit').length + ' criterios en el banco</span></div></div>';
 };
+/* ---------- Importar temario y banco desde Excel ---------- */
+function columnas(filas, claves) {
+  for (let r = 0; r < Math.min(filas.length, 15); r++) {
+    const f = filas[r].map(norm); const idx = {};
+    Object.keys(claves).forEach(k => { const i = f.findIndex(c => claves[k].some(p => c.startsWith(p))); if (i >= 0) idx[k] = i; });
+    if (Object.keys(idx).length >= Object.keys(claves).length - 2) return { r, idx };
+  }
+  return null;
+}
+function compDeTexto(t) { t = norm(t); return t.includes('oral') ? 'O' : t.startsWith('lee') || t.includes('lee ') ? 'L' : t.startsWith('escrib') || t.includes('escribe') ? 'E' : null; }
+function capDeTexto(t, comp) {
+  const n = norm(t).replace(/[.]/g, '').trim(); if (!n) return null;
+  const lista = comp ? COMP[comp].caps : Object.values(CAP);
+  let k = lista.find(c => norm(c.nombre).replace(/[.]/g, '') === n) || lista.find(c => norm(c.nombre).startsWith(n.slice(0, 22)) || n.startsWith(norm(c.nombre).slice(0, 22)));
+  if (!k && comp) return capDeTexto(t, null);
+  return k ? k.id : null;
+}
+function gradoDe(t) { const m = String(t).match(/[1-5]/); return m ? m[0] : null; }
+function bimDe(t) { t = String(t).trim().toUpperCase(); const r = { I: 1, II: 2, III: 3, IV: 4 }; if (r[t]) return r[t]; const m = t.match(/[1-4]/); return m ? Number(m[0]) : null; }
+CAMBIO.importarTemario = async (v, d, el) => {
+  const f = el.files[0]; el.value = ''; if (!f) return;
+  let filas; try { filas = await XL.leer(f, 'Temario'); } catch (e) { toast('No se pudo leer el archivo: ' + e.message, 'error'); return; }
+  const c = columnas(filas, { grado: ['grado'], bim: ['bimestre'], n: ['n', 'nro', 'sesion'], tema: ['tema', 'titulo'], prop: ['proposito'], prod: ['producto'], comp: ['competencia'], cap: ['capacidad'], crit: ['criterio'] });
+  if (!c || c.idx.tema == null || c.idx.crit == null) { toast('No encontré las columnas Tema y Criterio en la primera hoja.', 'error'); return; }
+  const I = c.idx; const grupos = new Map(); const errores = [];
+  filas.slice(c.r + 1).forEach((fl, k) => {
+    const tema = String(fl[I.tema] || '').trim(); const crit = String(fl[I.crit] || '').trim(); if (!tema) return;
+    const grado = gradoDe(fl[I.grado]); const bim = bimDe(fl[I.bim]);
+    if (!grado || !bim) { errores.push('Fila ' + (c.r + k + 2) + ': falta grado o bimestre'); return; }
+    const comp = compDeTexto(fl[I.comp] || '');
+    const cap = capDeTexto(fl[I.cap] || '', comp);
+    if (crit && !cap) { errores.push('Fila ' + (c.r + k + 2) + ': no reconozco la capacidad «' + fl[I.cap] + '»'); return; }
+    const key = grado + '|' + bim + '|' + norm(tema);
+    if (!grupos.has(key)) grupos.set(key, { grado, bim, nombre: tema, proposito: String(fl[I.prop] || '').trim(), producto: String(fl[I.prod] || '').trim(), orden: Number(fl[I.n]) || grupos.size + 1, crit: [], critCap: [] });
+    const g = grupos.get(key);
+    if (crit && !g.crit.some(x => norm(x) === norm(crit))) { g.crit.push(crit); g.critCap.push(cap); }
+  });
+  let nuevos = 0, act = 0;
+  grupos.forEach(g => {
+    const cuenta = {}; g.critCap.forEach(k => cuenta[k] = (cuenta[k] || 0) + 1);
+    g.cap = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0] || ''; g.comp = g.cap ? CAP[g.cap].comp : '';
+    const ex = temas(t => String(t.grado) === g.grado && Number(t.bim) === g.bim && norm(t.nombre) === norm(g.nombre))[0];
+    if (ex) { dbPut('tema', ex.id, Object.assign({}, dbGet('tema', ex.id), g)); act++; } else { dbPut('tema', uid(), g); nuevos++; }
+  });
+  programarSync();
+  toast(grupos.size + ' temas cargados (' + nuevos + ' nuevos, ' + act + ' actualizados)' + (errores.length ? '. Revisa: ' + errores.slice(0, 3).join('; ') : '.'), errores.length ? 'error' : '');
+  render();
+};
+CAMBIO.importarBanco = async (v, d, el) => {
+  const f = el.files[0]; el.value = ''; if (!f) return;
+  let filas; try { filas = await XL.leer(f, 'Banco_Criterios'); } catch (e) { toast('No se pudo leer el archivo: ' + e.message, 'error'); return; }
+  const c = columnas(filas, { grado: ['grado'], comp: ['competencia'], cap: ['capacidad'], crit: ['criterio de evaluacion', 'criterio'] });
+  if (!c || c.idx.crit == null || c.idx.cap == null) { toast('No encontré las columnas Capacidad y Criterio.', 'error'); return; }
+  const I = c.idx; let n = 0, fallas = 0;
+  filas.slice(c.r + 1).forEach(fl => {
+    const crit = String(fl[I.crit] || '').trim(); if (!crit) return;
+    const cap = capDeTexto(fl[I.cap] || '', compDeTexto(fl[I.comp] || ''));
+    if (!cap) { fallas++; return; }
+    if (agregarCriterioBanco(cap, crit, gradoDe(fl[I.grado]) || '')) n++;
+  });
+  programarSync(); toast(n + ' criterios agregados al banco' + (fallas ? ' (' + fallas + ' filas sin capacidad reconocida)' : '') + '.'); render();
+};
+ACC.plantillaTemario = () => XL.descargar([{ nombre: 'Temario', filas: [['Grado', 'Bimestre', 'N.° sesión', 'Tema', 'Propósito', 'Producto de la clase', 'Competencia', 'Capacidad', 'Criterio'], ['2.°', 'IV', 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Formula preguntas comprensibles sobre su familia'], ['2.°', 'IV', 1, 'Meet My Family!', 'Intercambiar información básica sobre la familia', 'Mini-entrevista oral', 'Se comunica oralmente en inglés como lengua extranjera', 'Interactúa estratégicamente con distintos interlocutores', 'Responde con información pertinente']], anchos: [8, 9, 9, 36, 46, 34, 40, 44, 60], fijas: 4 }], 'Plantilla-Temario.xlsx');
 ACC.nuevoTema = d => abrirFormTema({ grado: d.g, bim: Number(d.b) });
 ACC.editarTema = d => abrirFormTema(Object.assign({ id: d.id }, dbGet('tema', d.id)));
 function abrirFormTema(t, sesId) {
@@ -2080,8 +2184,10 @@ ACC.guardarTema = () => {
   const x = UI._tema; const cap = document.getElementById('tc').value; const nombre = document.getElementById('tn').value.trim();
   if (!nombre || !cap) { toast('Escribe el tema y elige la capacidad.', 'error'); return; }
   const v = { grado: document.getElementById('tg').value, bim: Number(document.getElementById('tb').value), nombre, proposito: document.getElementById('tp').value.trim(), producto: document.getElementById('tpr').value.trim(), cap, comp: CAP[cap].comp, crit: document.getElementById('tcr').value.split('\n').map(s => s.trim()).filter(Boolean), orden: Date.now() };
-  const id = x.id || uid(); dbPut('tema', id, Object.assign({}, x.id ? dbGet('tema', id) : {}, v));
-  v.crit.forEach(c => agregarCriterioBanco(cap, c));
+  const id = x.id || uid(); const previo = x.id ? Object.assign({ id }, dbGet('tema', id)) : null;
+  if (previo && previo.orden) v.orden = previo.orden;
+  v.critCap = v.crit.map(t => { if (!previo) return cap; const i = (previo.crit || []).findIndex(y => norm(y) === norm(t)); return i >= 0 ? capDe(previo, i) : cap; });
+  dbPut('tema', id, Object.assign({}, previo || {}, v));
   cerrarModal(); programarSync();
   if (x.ses) { ACC.ponerTema({ ses: x.ses, tema: id }); return; }
   render();
@@ -2117,7 +2223,7 @@ AJ.respaldo = () => { const s = syncConfig() || {}; const est = syncEstado();
   '<form class="tarjeta col" data-envio="guardarSync"><div class="campo"><label for="su">Enlace del respaldo (Apps Script)</label><input id="su" class="inp" value="' + esc(s.url || '') + '" placeholder="https://script.google.com/macros/s/…/exec"></div><div class="campo"><label for="sk">Clave del respaldo (la misma que pusiste en Code.gs)</label><input id="sk" type="password" class="inp" value="' + esc(s.clave || '') + '" minlength="12"></div><div class="fila"><button class="btn prim">Guardar y sincronizar</button>' + (s.url ? '<button type="button" class="btn" data-act="estadoSync">Sincronizar ahora</button><button type="button" class="btn peligro" data-act="quitarSync">Desconectar</button>' : '') + '</div>' +
   '<p class="muted peq" style="margin:0;line-height:1.5">Todo se guarda primero en este equipo, aunque no haya internet. Cuando hay conexión, se sube solo a tu Drive y baja lo que hiciste en otros equipos. Drive guarda además una copia diaria de los últimos 30 días.</p></form>' +
   '<div class="tarjeta col"><h2 style="font-size:19px">Copia en archivo</h2><div class="fila"><button class="btn" data-act="bajarRespaldo">Descargar respaldo completo (.json)</button><label class="btn" for="restau" style="cursor:pointer">Restaurar desde un respaldo</label><input id="restau" type="file" accept=".json,application/json" class="oculto" data-cambio="restaurar"></div><p class="muted peq" style="margin:0">Restaurar suma lo del archivo a lo que ya tienes; no borra nada.</p></div>'; };
-ACC.guardarSync = async () => { DB.meta.sync = { url: document.getElementById('su').value.trim(), clave: document.getElementById('sk').value }; guardarMeta(); const r = await sincronizar(); toast(r.ok ? 'Conectado. Guardado en Drive.' : 'No se pudo conectar: ' + r.motivo, r.ok ? '' : 'error'); render(); };
+ACC.guardarSync = async () => { DB.meta.sync = { url: limpiarEnlace(document.getElementById('su').value), clave: document.getElementById('sk').value }; guardarMeta(); const r = await sincronizar(); toast(r.ok ? 'Conectado. Guardado en Drive.' : 'No se pudo conectar: ' + r.motivo, r.ok ? '' : 'error'); render(); };
 ACC.quitarSync = () => confirmar('Desconectar respaldo', 'Los datos se seguirán guardando en este equipo, pero ya no subirán a Drive.', 'Desconectar', () => { DB.meta.sync = null; guardarMeta(); render(); }, true);
 ACC.bajarRespaldo = () => exportarRespaldo();
 CAMBIO.restaurar = async (v, d, el) => {
