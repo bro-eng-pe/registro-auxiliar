@@ -188,21 +188,23 @@ button.fld { cursor: pointer; } button.fld:hover { border-color: var(--acento); 
 .bloqueo { grid-column: 3 / 5; display: flex; gap: 10px; align-items: center; font-size: 14px; color: var(--aviso-t); }
 .obs-btn { width: 44px; height: 40px; border: 1px solid var(--linea2); border-radius: 8px; background: var(--sup); display: flex; align-items: center; justify-content: center; }
 .obs-btn.tiene { background: var(--acento-sv); border-color: var(--acento); }
-@media (max-width: 900px) {
-  .frow { grid-template-columns: 1fr auto; padding: 14px 16px; gap: 10px; border-radius: 16px; margin: 0 12px 12px; border: 2px solid var(--linea); }
-  .frow:nth-child(even) { background: var(--sup); }
-  .frow.cab-row { display: none; }
-  .frow .fnum { display: none; }
-  .frow .fn { grid-column: 1 / 2; }
-  .frow .fres { grid-column: 2 / 3; grid-row: 1; justify-self: end; }
-  .fcrits { grid-column: 1 / -1; flex-direction: column; gap: 8px; }
-  .fcrit { width: auto !important; flex-direction: row; justify-content: space-between; gap: 10px; align-items: center; }
-  .fcrit .cl { display: block; font-size: 14px; line-height: 1.3; flex: 1; }
-  .fpart { grid-column: 1 / 2; flex-wrap: wrap; border-top: 1px solid var(--linea); padding-top: 10px; }
-  .frow .obs-btn { grid-column: 2 / 3; justify-self: end; align-self: end; }
-  .bloqueo { grid-column: 1 / -1; }
-  .ficha-lista { padding-top: 12px; }
-}
+/* Modo tarjetas (tableta vertical o elegido en Ajustes › Apariencia) */
+html.modo-tarjetas .frow { grid-template-columns: 1fr auto; padding: 14px 16px; gap: 10px; border-radius: 16px; margin: 0 12px 12px; border: 2px solid var(--linea); }
+html.modo-tarjetas .frow:nth-child(even) { background: var(--sup); }
+html.modo-tarjetas .frow.cab-row { display: none; }
+html.modo-tarjetas .frow .fnum { display: none; }
+html.modo-tarjetas .frow .fn { grid-column: 1 / 2; }
+html.modo-tarjetas .frow .fres { grid-column: 2 / 3; grid-row: 1; justify-self: end; }
+html.modo-tarjetas .fcrits { grid-column: 1 / -1; flex-direction: column; gap: 8px; }
+html.modo-tarjetas .fcrit { width: auto !important; flex-direction: row; justify-content: space-between; gap: 10px; align-items: center; }
+html.modo-tarjetas .fcrit .cl { display: block; font-size: 14px; line-height: 1.3; flex: 1; }
+html.modo-tarjetas .fpart { grid-column: 1 / 2; flex-wrap: wrap; border-top: 1px solid var(--linea); padding-top: 10px; }
+html.modo-tarjetas .frow .obs-btn { grid-column: 2 / 3; justify-self: end; align-self: end; }
+html.modo-tarjetas .bloqueo { grid-column: 1 / -1; }
+html.modo-tarjetas .ficha-lista { padding-top: 12px; }
+
+html.modo-tarjetas .frow.just { background: var(--just); }
+html.modo-tarjetas .frow.cond { background: var(--peligro-sv); }
 
 /* ---------- Botones de fecha ---------- */
 .grid-fechas { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
@@ -334,7 +336,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.2.1';
+const APP_VERSION = '2.2.2';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -2294,9 +2296,19 @@ ACC.activarPatron = async () => { try { await registrarPatron((dbGet('cfg', 'aut
 ACC.quitarPatron = () => { DB.meta.patron = null; guardarMeta(); render(); };
 
 /* ---------- Apariencia ---------- */
-AJ.apariencia = () => { const t = DB.meta.tema || 'auto'; return '<h1 style="font-size:26px">Apariencia</h1><div class="tarjeta fila">' + [['auto', 'Según el equipo'], ['light', 'Claro'], ['dark', 'Oscuro']].map(o => '<button class="btn' + (t === o[0] ? ' prim' : '') + '" data-act="ponerTemaVisual" data-v="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>'; };
+AJ.apariencia = () => { const t = DB.meta.tema || 'auto'; const d = DB.meta.diseno || 'auto';
+  return '<h1 style="font-size:26px">Apariencia</h1>' +
+  '<div class="tarjeta col"><h2 style="font-size:19px">Colores</h2><div class="fila">' + [['auto', 'Según el equipo'], ['light', 'Claro'], ['dark', 'Oscuro']].map(o => '<button class="btn' + (t === o[0] ? ' prim' : '') + '" data-act="ponerTemaVisual" data-v="' + o[0] + '">' + o[1] + '</button>').join('') + '</div></div>' +
+  '<div class="tarjeta col"><h2 style="font-size:19px">Diseño de las fichas y rúbricas</h2><div class="fila">' + [['auto', 'Automático'], ['tarjetas', 'Tableta (tarjetas)'], ['tabla', 'Computadora (tabla)']].map(o => '<button class="btn' + (d === o[0] ? ' prim' : '') + '" data-act="ponerDiseno" data-v="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>' +
+  '<p class="muted peq" style="margin:0;line-height:1.5"><b>Tableta (tarjetas):</b> un estudiante por tarjeta, con cada criterio escrito completo. <b>Computadora (tabla):</b> todos los estudiantes en filas, los criterios en columnas. <b>Automático:</b> tarjetas en pantallas angostas (tableta vertical, celular) y tabla en pantallas anchas; si activas «Sitio para computadoras» en el navegador, cambia a tabla. Se guarda solo en este equipo.</p></div>'; };
+ACC.ponerDiseno = d => { DB.meta.diseno = d.v; guardarMeta(); aplicarDiseno(); render(); };
+function aplicarDiseno() {
+  const m = DB.meta.diseno || 'auto';
+  const tarjetas = m === 'tarjetas' || (m === 'auto' && window.innerWidth <= 900);
+  document.documentElement.classList.toggle('modo-tarjetas', tarjetas);
+}
 ACC.ponerTemaVisual = d => { DB.meta.tema = d.v; guardarMeta(); aplicarTemaVisual(); render(); };
-function aplicarTemaVisual() { const t = DB.meta.tema; if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); }
+function aplicarTemaVisual() { aplicarDiseno(); const t = DB.meta.tema; if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); }
 
 /* ---------- Reinicio ---------- */
 AJ.reinicio = () => '<h1 style="font-size:26px;color:var(--peligro)">Reinicio</h1><form class="tarjeta col" data-envio="reiniciar" style="line-height:1.5"><p style="margin:0">Borra toda la información cargada (asistencia, fichas, rúbricas, conducta, citaciones' + ' y, si quieres, secciones y temario). Antes se descarga un <b>respaldo completo</b> y, si está conectado, Drive guarda otra copia.</p>' +
@@ -2390,6 +2402,7 @@ async function arrancar() {
     refrescarEstado();
   });
   window.addEventListener('hashchange', () => render());
+  window.addEventListener('resize', () => aplicarDiseno());
   window.addEventListener('online', () => { refrescarEstado(); programarSync(500); });
   window.addEventListener('offline', () => refrescarEstado());
   document.addEventListener('visibilitychange', () => {
