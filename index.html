@@ -334,7 +334,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.2.0';
+const APP_VERSION = '2.2.1';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -840,6 +840,12 @@ async function verificarPatron() {
    ===================================================================== */
 const SYNC = { enCurso: false, ultimo: null, error: null, timer: null };
 function syncConfig() { return DB.meta.sync || null; }
+/* Código de conexión: enlace + clave en un solo texto, para pasarlos a otro equipo sin escribirlos */
+function codigoConexion() { const c = syncConfig(); if (!c) return ''; return 'RA-' + btoa(unescape(encodeURIComponent(JSON.stringify({ u: c.url, c: c.clave })))); }
+function leerCodigo(t) {
+  const m = String(t || '').match(/RA-([A-Za-z0-9+/=]+)/); if (!m) return null;
+  try { const o = JSON.parse(decodeURIComponent(escape(atob(m[1])))); return o.u && o.c ? { url: o.u, clave: o.c } : null; } catch (e) { return null; }
+}
 /* Acepta el enlace aunque se pegue junto con otro texto */
 function limpiarEnlace(t) {
   t = String(t || '').trim();
@@ -1304,8 +1310,10 @@ function vistaIngreso() {
     if (ING.modo === 'conectar') {
       form = '<form data-envio="conectarRespaldo"><h2 style="font-size:30px">Conectar con mi respaldo</h2>' +
         '<p class="muted" style="margin:0;line-height:1.5">Usa esto en la laptop o en otro equipo: trae todo lo que ya registraste en la tableta.</p>' +
-        '<div class="campo"><label for="curl">Enlace del respaldo (Apps Script)</label><input id="curl" class="inp" required placeholder="https://script.google.com/macros/s/…/exec"></div>' +
-        '<div class="campo"><label for="cclave">Clave del respaldo</label><input id="cclave" class="inp" type="password" required minlength="12"></div>' +
+        '<div class="campo"><label for="ccod">Código de conexión (recomendado)</label><textarea id="ccod" class="inp" style="min-height:70px" placeholder="Pega aquí el código que empieza con RA-"></textarea><span class="muted peq">En la laptop: Ajustes › Respaldo en Google Drive › Copiar código para otro equipo. Envíatelo por WhatsApp o correo y pégalo aquí.</span></div>' +
+        '<div class="sep">o escribe el enlace y la clave</div>' +
+        '<div class="campo"><label for="curl">Enlace del respaldo (Apps Script)</label><input id="curl" class="inp" placeholder="https://script.google.com/macros/s/…/exec" autocapitalize="none" autocorrect="off" spellcheck="false"></div>' +
+        '<div class="campo"><label for="cclave">Clave del respaldo</label><input id="cclave" class="inp" type="password" autocapitalize="none" autocorrect="off" spellcheck="false"><label class="fila peq" style="gap:8px"><input type="checkbox" data-cambio="verClave" data-id="cclave" style="width:22px;height:22px"> Mostrar la clave para revisarla</label></div>' +
         (ING.error ? '<div class="aviso rojo">' + esc(ING.error) + '</div>' : '') +
         '<button class="btn prim" style="min-height:56px">Conectar y descargar mis datos</button><button type="button" class="btn" data-act="ingModo" data-m="">Volver</button></form>';
     } else {
@@ -1352,7 +1360,10 @@ ACC.crearCuenta = async () => {
   location.hash = '#/ajustes/inicio'; render();
 };
 ACC.conectarRespaldo = async () => {
-  const url = limpiarEnlace(document.getElementById('curl').value), clave = document.getElementById('cclave').value;
+  const cod = leerCodigo(document.getElementById('ccod').value);
+  const url = cod ? cod.url : limpiarEnlace(document.getElementById('curl').value), clave = cod ? cod.clave : document.getElementById('cclave').value.trim();
+  if (!url || !clave) { ING.error = 'Pega el código de conexión, o escribe el enlace y la clave.'; render(); return; }
+  if (document.getElementById('ccod').value.trim() && !cod) { ING.error = 'El código de conexión no está completo. Cópialo de nuevo desde la laptop.'; render(); return; }
   DB.meta.sync = { url, clave }; DB.meta.since = 0; guardarMeta();
   ING.error = ''; toast('Conectando…');
   const r = await sincronizar();
@@ -1395,6 +1406,8 @@ ACC.olvideOk = async () => {
   await crearCredenciales(u, n); DB.meta.ultimoUsuario = u; DB.meta.fallos = 0; DB.meta.bloqueoHasta = 0; guardarMeta();
   cerrarModal(); toast('Contraseña cambiada. Ingresa con la nueva.'); programarSync(500); render();
 };
+
+CAMBIO.verClave = (v, d, el) => { const i = document.getElementById(d.id); if (i) i.type = el.checked ? 'text' : 'password'; };
 
 'use strict';
 /* =====================================================================
@@ -2262,10 +2275,11 @@ ACC.guardarReglas = () => { setCfg({ bastante: Math.max(1, Number(document.getEl
 /* ---------- Respaldo ---------- */
 AJ.respaldo = () => { const s = syncConfig() || {}; const est = syncEstado();
   return '<h1 style="font-size:26px">Respaldo en Google Drive</h1><div class="aviso ' + (est.tipo === 'ok' ? 'verde' : est.tipo === 'error' ? 'rojo' : '') + '">' + esc(est.texto) + (SYNC.error ? '<br>Detalle: ' + esc(SYNC.error) : '') + '</div>' +
-  '<form class="tarjeta col" data-envio="guardarSync"><div class="campo"><label for="su">Enlace del respaldo (Apps Script)</label><input id="su" class="inp" value="' + esc(s.url || '') + '" placeholder="https://script.google.com/macros/s/…/exec"></div><div class="campo"><label for="sk">Clave del respaldo (la misma que pusiste en Code.gs)</label><input id="sk" type="password" class="inp" value="' + esc(s.clave || '') + '" minlength="12"></div><div class="fila"><button class="btn prim">Guardar y sincronizar</button>' + (s.url ? '<button type="button" class="btn" data-act="estadoSync">Sincronizar ahora</button><button type="button" class="btn peligro" data-act="quitarSync">Desconectar</button>' : '') + '</div>' +
+  '<form class="tarjeta col" data-envio="guardarSync"><div class="campo"><label for="su">Enlace del respaldo (Apps Script)</label><input id="su" class="inp" value="' + esc(s.url || '') + '" placeholder="https://script.google.com/macros/s/…/exec"></div><div class="campo"><label for="sk">Clave del respaldo (la misma que pusiste en Code.gs)</label><input id="sk" type="password" class="inp" value="' + esc(s.clave || '') + '" autocapitalize="none" autocorrect="off" spellcheck="false"><label class="fila peq" style="gap:8px"><input type="checkbox" data-cambio="verClave" data-id="sk" style="width:22px;height:22px"> Mostrar la clave</label></div><div class="fila"><button class="btn prim">Guardar y sincronizar</button>' + (s.url ? '<button type="button" class="btn" data-act="estadoSync">Sincronizar ahora</button><button type="button" class="btn peligro" data-act="quitarSync">Desconectar</button>' : '') + '</div>' +
   '<p class="muted peq" style="margin:0;line-height:1.5">Todo se guarda primero en este equipo, aunque no haya internet. Cuando hay conexión, se sube solo a tu Drive y baja lo que hiciste en otros equipos. Drive guarda además una copia diaria de los últimos 30 días.</p></form>' +
+  (s.url ? '<div class="tarjeta col"><h2 style="font-size:19px">Conectar otro equipo</h2><p class="muted peq" style="margin:0;line-height:1.5">Copia el código y envíatelo (WhatsApp, correo). En la tableta toca «Ya uso el registro en otro equipo» y pégalo. Así no tienes que escribir el enlace ni la clave. Trátalo como una contraseña: no lo compartas con nadie.</p><div class="fila"><button class="btn prim" data-act="copiarCodigo">Copiar código para otro equipo</button></div></div>' : '') +
   '<div class="tarjeta col"><h2 style="font-size:19px">Copia en archivo</h2><div class="fila"><button class="btn" data-act="bajarRespaldo">Descargar respaldo completo (.json)</button><label class="btn" for="restau" style="cursor:pointer">Restaurar desde un respaldo</label><input id="restau" type="file" accept=".json,application/json" class="oculto" data-cambio="restaurar"></div><p class="muted peq" style="margin:0">Restaurar suma lo del archivo a lo que ya tienes; no borra nada.</p></div>'; };
-ACC.guardarSync = async () => { DB.meta.sync = { url: limpiarEnlace(document.getElementById('su').value), clave: document.getElementById('sk').value }; guardarMeta(); const r = await sincronizar(); toast(r.ok ? 'Conectado. Guardado en Drive.' : 'No se pudo conectar: ' + r.motivo, r.ok ? '' : 'error'); render(); };
+ACC.guardarSync = async () => { DB.meta.sync = { url: limpiarEnlace(document.getElementById('su').value), clave: document.getElementById('sk').value.trim() }; guardarMeta(); const r = await sincronizar(); toast(r.ok ? 'Conectado. Guardado en Drive.' : 'No se pudo conectar: ' + r.motivo, r.ok ? '' : 'error'); render(); };
 ACC.quitarSync = () => confirmar('Desconectar respaldo', 'Los datos se seguirán guardando en este equipo, pero ya no subirán a Drive.', 'Desconectar', () => { DB.meta.sync = null; guardarMeta(); render(); }, true);
 ACC.bajarRespaldo = () => exportarRespaldo();
 CAMBIO.restaurar = async (v, d, el) => {
@@ -2358,6 +2372,12 @@ function sembrarDemo() {
     });
   });
 }
+
+ACC.copiarCodigo = async () => {
+  const c = codigoConexion(); if (!c) return;
+  try { await navigator.clipboard.writeText(c); toast('Código copiado. Pégalo en WhatsApp o en un correo para ti.'); }
+  catch (e) { pedirTexto('Código de conexión', 'Selecciona todo el texto y cópialo', c, () => { }, { ok: 'Listo' }); }
+};
 
 'use strict';
 /* =====================================================================
