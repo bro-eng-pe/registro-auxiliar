@@ -167,7 +167,7 @@ button.fld { cursor: pointer; } button.fld:hover { border-color: var(--acento); 
 .ficha-lista { display: flex; flex-direction: column; }
 .frow { display: grid; grid-template-columns: 34px minmax(170px, 1fr) auto 214px 64px 44px; gap: 10px; align-items: center; padding: 7px 16px; border-bottom: 1px solid var(--linea); background: var(--sup); }
 .frow:nth-child(even) { background: var(--sup2); }
-.frow.cab-row { position: sticky; top: 64px; z-index: 5; background: var(--sup); font-size: 12px; font-weight: 700; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; padding-top: 10px; padding-bottom: 10px; }
+.frow.cab-row { z-index: 5; background: var(--sup); font-size: 12px; font-weight: 700; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; padding-top: 10px; padding-bottom: 10px; }
 .frow.just { background: var(--just); }
 .frow.cond { background: var(--peligro-sv); }
 .frow .fn { display: flex; flex-direction: column; min-width: 0; }
@@ -314,6 +314,51 @@ html.modo-tarjetas .frow.cond { background: var(--peligro-sv); }
   .tabla-caja { max-height: none; overflow: visible; }
 }
 
+/* ---------- Nómina oficial y registro de asistencia ---------- */
+.nom-item { background: var(--sup2); min-height: 56px; flex-wrap: wrap; }
+.nom-item.inactivo .tx b { color: var(--suave); text-decoration: line-through; text-decoration-thickness: 1px; }
+.nom-seg button { font-size: 13px; padding: 0 10px; }
+.seg .on-est-activo { background: var(--acento); color: #fff; } .seg .on-est-trasladado { background: var(--azul); color: #fff; }
+.seg .on-est-retirado { background: #6b7280; color: #fff; } .seg .on-est-noasiste { background: #c2410c; color: #fff; }
+.etiqueta.est-activo { background: var(--acento-sv); color: var(--acento); } .etiqueta.est-trasladado { background: var(--azul); color: #fff; }
+.etiqueta.est-retirado { background: #6b7280; color: #fff; } .etiqueta.est-noasiste { background: #c2410c; color: #fff; }
+table.asis-reg tr.inactivo td { color: var(--suave); }
+table.asis-reg th.dia { min-width: 44px; font-size: 11px; }
+table.asis-reg th.dia.con-ficha { text-decoration: underline; text-decoration-color: var(--acento); text-decoration-thickness: 2px; text-underline-offset: 3px; }
+table.asis-reg td { padding: 3px 2px; }
+.as { position: relative; width: 36px; height: 32px; border: 0; border-radius: 7px; font-weight: 700; font-size: 14px; cursor: pointer; }
+.as-P { background: var(--acento-sv); color: var(--acento); } .as-T { background: var(--tarde); color: #fff; }
+.as-F { background: #c2410c; color: #fff; } .as-J { background: #e8a33a; color: #17221f; }
+.as i.cC { position: absolute; top: -5px; right: -5px; font-style: normal; font-size: 10px; background: var(--peligro); color: #fff; border-radius: 6px; padding: 1px 4px; }
+
+/* Ficha y rúbrica en tabla: N.° y Estudiante quedan fijos al desplazarse a la derecha */
+.ficha-cab { position: sticky; top: 64px; z-index: 6; overflow: hidden; background: var(--sup); }
+html:not(.modo-tarjetas) .ficha-cuerpo { overflow-x: auto; overflow-y: hidden; }
+html:not(.modo-tarjetas) .ficha-filas { width: max-content; min-width: 100%; }
+html:not(.modo-tarjetas) .frow > .fnum, html:not(.modo-tarjetas) .frow > .fn { position: sticky; z-index: 2; background: inherit; align-self: stretch; display: flex; align-items: center; }
+html:not(.modo-tarjetas) .frow > .fnum { left: 0; margin-left: -16px; padding-left: 16px; }
+html:not(.modo-tarjetas) .frow > .fn { left: 50px; margin-left: -10px; padding-left: 10px; flex-direction: column; align-items: flex-start; justify-content: center; padding-right: 8px; box-shadow: 6px 0 6px -6px rgba(0,0,0,.25); }
+html:not(.modo-tarjetas) .frow { background-clip: padding-box; }
+html:not(.modo-tarjetas) .ficha-lista .frow { grid-template-columns: 34px 250px auto 214px 64px 44px; }
+html:not(.modo-tarjetas) .ficha-lista .frow > .fn b { max-width: 236px; }
+
+/* Materiales (enlaces de Drive) */
+.mat-bloque { display: flex; flex-direction: column; gap: 6px; }
+.mat-lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.mat-chip { display: inline-flex; align-items: center; border: 1px solid var(--linea2); border-radius: 10px; background: var(--sup); overflow: hidden; min-height: 40px; }
+.mat-chip a { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; font-weight: 700; font-size: 14px; color: var(--tinta); text-decoration: none; max-width: 320px; }
+.mat-chip a:hover { background: var(--sup2); }
+.mat-chip i { font-style: normal; font-size: 11px; font-weight: 800; min-width: 26px; height: 22px; border-radius: 5px; display: inline-flex; align-items: center; justify-content: center; color: #fff; background: #6b7280; }
+.mat-ppt i { background: #d97706; } .mat-doc i { background: #2563eb; } .mat-xls i { background: #15803d; } .mat-pdf i { background: #b91c1c; } .mat-video i { background: #dc2626; } .mat-form i { background: #7c3aed; } .mat-carpeta i { background: #475569; }
+.mat-chip button { border: 0; border-left: 1px solid var(--linea); background: transparent; width: 36px; align-self: stretch; font-size: 18px; color: var(--suave); }
+.mat-ficha { margin-top: 4px; }
+
+/* Ficha con varias competencias: un nivel por competencia */
+.lv-multi { display: inline-flex; flex-direction: column; gap: 3px; align-items: stretch; }
+.lv-multi > span { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.lv-multi small { font-size: 10px; font-weight: 700; color: var(--suave); }
+.lv-multi .lv { min-width: 30px; height: 22px; font-size: 12px; }
+
 </style>
 </head>
 <body>
@@ -341,7 +386,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.3.4';
+const APP_VERSION = '2.5.0';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -486,7 +531,8 @@ async function dbIniciar() {
 function guardarMeta() { idbProgramar(); }
 
 let _reloj = 0;
-function ahora() { const t = Date.now(); _reloj = t > _reloj ? t : _reloj + 1; return _reloj; }
+/* Hora común para todos los equipos: la del servidor de Google (corrige tabletas con la hora adelantada o atrasada) */
+function ahora() { const t = Date.now() + (Number(DB.meta && DB.meta.desfase) || 0); _reloj = t > _reloj ? t : _reloj + 1; return _reloj; }
 
 function dbGet(tipo, id) { const m = DB.porTipo.get(tipo); const r = m && m.get(id); return r ? r.v : null; }
 function dbList(tipo) { const m = DB.porTipo.get(tipo); if (!m) return []; return Array.from(m.entries()).map(([id, r]) => Object.assign({ id }, r.v)); }
@@ -499,6 +545,17 @@ function dbDel(tipo, id) {
   const k = tipo + ':' + id; if (!DB.recs.has(k)) return;
   const r = { t: ahora(), dev: DB.meta.dev, v: null, d: true };
   DB.recs.set(k, r); indexar(k, r); DB.sucios.add(k); _colaEscritura.set(k, r); idbProgramar(); avisarCambio();
+}
+/* Restaurar un respaldo: suma lo del archivo y revive lo que se había borrado; no borra nada */
+function restaurarRegistros(lista) {
+  let n = 0;
+  lista.forEach(x => {
+    if (x.d || x.v == null) return;
+    const cur = DB.recs.get(x.k);
+    if (cur && !cur.d && !esMasNuevo({ t: x.t, dev: x.dev }, cur)) return;
+    const i = x.k.indexOf(':'); dbPut(x.k.slice(0, i), x.k.slice(i + 1), x.v); n++;
+  });
+  return n;
 }
 function esMasNuevo(a, b) { if (!b) return true; if (a.t !== b.t) return a.t > b.t; return String(a.dev || '') > String(b.dev || ''); }
 function dbFusionar(lista, marcarSucio) {
@@ -583,6 +640,7 @@ function setAsistencia(aulaId, fecha, estId, cambios) {
   dbPut('asis', asisClave(aulaId, fecha, estId), nuevo);
   dbPut('asisdia', aulaId + '|' + fecha, { aulaId, fecha, tomada: true });
   sincronizarCitacion(nuevo);
+  if (cambios.e && cambios.e !== actual.e && typeof revisarFaltas === 'function') revisarFaltas(aulaId, estId);
   return nuevo;
 }
 function asistenciaTomada(aulaId, fecha) { return !!dbGet('asisdia', aulaId + '|' + fecha); }
@@ -622,6 +680,9 @@ function temasDeAula(aulaId, bim) {
 function temaUsado(aulaId, temaId) { return sesiones(s => s.aulaId === aulaId && s.temaId === temaId).length > 0; }
 /* Capacidad de cada criterio: un tema o ficha puede evaluar varias capacidades */
 function capDe(s, i) { return (s.critCap && s.critCap[i]) || s.cap; }
+function compDe(s, i) { const k = capDe(s, i); return CAP[k] ? CAP[k].comp : s.comp; }
+/* Competencias de un tema o ficha (1, 2 o 3), en el orden de sus criterios */
+function compsDe(s) { const l = Array.from(new Set((s.crit || []).map((_, i) => compDe(s, i)).filter(Boolean))); return l.length ? l : (s.comp ? [s.comp] : []); }
 function capsDe(s) { return Array.from(new Set((s.crit || []).map((_, i) => capDe(s, i)).filter(Boolean))); }
 function bancoCriterios(capId, grado) {
   const set = new Map(); const g = grado == null ? null : String(grado);
@@ -685,16 +746,16 @@ function calcularNivelClase(ses, estId, extra) {
   if (!estMatriculado(e, ses.fecha)) return { lv: null, estado: 'nomat' };
   const a = asistencia(ses.aulaId, ses.fecha, estId);
   const n = (extra && extra.nota) || nota(ses.id, estId);
-  if (a.e === 'F') { const pc = {}; capsDe(ses).forEach(k => pc[k] = 'C'); return { lv: 'C', estado: 'falta', base: 'C', porCap: pc }; }
-  if (a.e === 'J' && !n.rec) return { lv: null, estado: 'justificada', porCap: {} };
-  const valores = []; const porCapV = {};
+  if (a.e === 'F') { const pc = {}, po = {}; capsDe(ses).forEach(k => pc[k] = 'C'); compsDe(ses).forEach(k => po[k] = 'C'); return { lv: 'C', estado: 'falta', base: 'C', porCap: pc, porComp: po }; }
+  if (a.e === 'J' && !n.rec) return { lv: null, estado: 'justificada', porCap: {}, porComp: {} };
+  const valores = []; const porCapV = {}; const porCompV = {};
   (ses.crit || []).forEach((_, i) => {
     const v = n.c[i]; let x = null;
     if (ses.tipo === 'cotejo') { if (v === 'S') x = 3; else if (v === 'N') x = 1; }
     else if (NIVEL_NUM[v]) x = NIVEL_NUM[v];
-    if (x != null) { valores.push(x); const k = capDe(ses, i); (porCapV[k] = porCapV[k] || []).push(x); }
+    if (x != null) { valores.push(x); const k = capDe(ses, i); (porCapV[k] = porCapV[k] || []).push(x); const o = compDe(ses, i); (porCompV[o] = porCompV[o] || []).push(x); }
   });
-  if (!valores.length) return { lv: null, estado: 'pendiente', parcial: false, porCap: {} };
+  if (!valores.length) return { lv: null, estado: 'pendiente', parcial: false, porCap: {}, porComp: {} };
   const completo = valores.length === (ses.crit || []).length;
   const base = numANivel(valores.reduce((x, y) => x + y, 0) / valores.length);
   let lv = base; const motivos = [];
@@ -708,15 +769,17 @@ function calcularNivelClase(ses, estId, extra) {
   if (lv !== base) motivos.push(lv === 'AD' ? 'participación destacada' : 'participó bastante');
   const porCap = {};
   Object.keys(porCapV).forEach(k => porCap[k] = ajustePart(numANivel(porCapV[k].reduce((x, y) => x + y, 0) / porCapV[k].length)));
+  const porComp = {}; const baseComp = {};
+  Object.keys(porCompV).forEach(k => { baseComp[k] = numANivel(porCompV[k].reduce((x, y) => x + y, 0) / porCompV[k].length); porComp[k] = ajustePart(baseComp[k]); });
   if (a.cond === 'C') {
     const aula = dbGet('aula', ses.aulaId) || {};
     const leve = (c.gradosLeves || []).map(String).includes(String(aula.grado));
     const baja = l => leve ? ({ AD: 'B', A: 'B', B: 'C', C: 'C' })[l] : 'C';
     const antes = lv;
-    lv = baja(lv); Object.keys(porCap).forEach(k => porCap[k] = baja(porCap[k]));
+    lv = baja(lv); Object.keys(porCap).forEach(k => porCap[k] = baja(porCap[k])); Object.keys(porComp).forEach(k => porComp[k] = baja(porComp[k]));
     motivos.push('conducta C (' + antes + '→' + lv + ')');
   }
-  return { lv, base, estado: completo ? 'ok' : 'parcial', motivos, conducta: a.cond, porCap };
+  return { lv, base, estado: completo ? 'ok' : 'parcial', motivos, conducta: a.cond, porCap, porComp, baseComp };
 }
 
 /* ---------- Consolidados ---------- */
@@ -734,10 +797,11 @@ function consolidarAula(aulaId, bim) {
       r.clases[s.id] = res;
       if ((n.p || []).length) { n.p.forEach(l => { if (r.part[l] != null) r.part[l]++; }); r.part.total += n.p.length; r.part.clases++; }
       Object.keys(res.porCap || {}).forEach(k => { if (res.porCap[k]) (acumCap[k] = acumCap[k] || []).push(res.porCap[k]); });
-      if (res.lv) {
-        (acumComp[s.comp] = acumComp[s.comp] || []).push(res.lv);
-        if (s.temaId) { const k = s.temaId + '|' + s.comp; (acumTema[k] = acumTema[k] || []).push(res.lv); }
-      }
+      const pc = res.porComp && Object.keys(res.porComp).length ? res.porComp : (res.lv ? { [s.comp]: res.lv } : {});
+      Object.keys(pc).forEach(o => { if (!pc[o]) return;
+        (acumComp[o] = acumComp[o] || []).push(pc[o]);
+        if (s.temaId) { const k = s.temaId + '|' + o; (acumTema[k] = acumTema[k] || []).push(pc[o]); }
+      });
     });
     Object.keys(acumCap).forEach(k => r.cap[k] = promedioNiveles(acumCap[k]));
     Object.keys(acumComp).forEach(k => r.comp[k] = promedioNiveles(acumComp[k]));
@@ -894,8 +958,11 @@ async function sincronizar(opts) {
   const correo = (DB.meta.colaCorreo || []).slice(0, 10);
   const cuerpo = { accion: opts.accion || 'sync', clave: c.clave, since: DB.meta.since || 0, epoca: DB.meta.epoca || null, dev: DB.meta.dev, cambios, correo, para: cfg().correo, extra: opts.extra || null };
   try {
+    const t0 = Date.now();
     const r = await fetch(c.url, { method: 'POST', body: JSON.stringify(cuerpo), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' });
     const j = await r.json();
+    const t1 = Date.now();
+    if (j.ok && j.ahora && t1 - t0 < 20000) { const d = Math.round(j.ahora - (t0 + t1) / 2); DB.meta.desfase = Math.abs(d) < 1500 ? 0 : d; }
     if (!j.ok) throw new Error(j.error || 'Error del respaldo');
     if (j.epocaCambio) {
       // Se reinició el registro desde otro equipo: se descarta lo local y se vuelve a cargar
@@ -908,7 +975,7 @@ async function sincronizar(opts) {
     DB.meta.since = j.ahora; DB.meta.epoca = j.epoca; DB.meta.ultimaSync = Date.now();
     if (j.enviados && j.enviados.length) {
       DB.meta.colaCorreo = (DB.meta.colaCorreo || []).filter(m => !j.enviados.includes(m.id));
-      j.enviados.forEach(id => (id.split(',')).forEach(cid => { const cit = dbGet('cit', cid); if (cit && !cit.enviada) dbPut('cit', cid, Object.assign({}, cit, { enviada: Date.now() })); }));
+      j.enviados.forEach(id => (id.split(',')).forEach(cid => { ['cit', 'inf'].forEach(t => { const x = dbGet(t, cid); if (x && !x.enviada) dbPut(t, cid, Object.assign({}, x, { enviada: Date.now() })); }); }));
     }
     SYNC.error = null; guardarMeta(); await idbVaciar();
     SYNC.enCurso = false; avisarCambio();
@@ -985,9 +1052,9 @@ function citacionParrafos(cit, primera) {
   p.push(wP(wRun('Cargo de recepción · ' + est.ap + ', ' + est.no + ' · ' + aulaNombre(cit.aulaId) + ' · Citación para el ' + fechaCorta(cit.cita) + '/' + cit.cita.slice(0, 4) + ' · Firma: ______________', { sz: 18 })));
   return p.join('');
 }
-async function docxDeCitaciones(lista) {
+async function docxDeCitaciones(lista) { return docxDeCuerpo(lista.map((c, i) => citacionParrafos(c, i === 0)).join('')); }
+async function docxDeCuerpo(cuerpo) {
   if (!window.JSZip) { libNoDisponible('JSZip'); return null; }
-  const cuerpo = lista.map((c, i) => citacionParrafos(c, i === 0)).join('');
   const doc = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>' + cuerpo +
     '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1300" w:right="1300" w:bottom="1300" w:left="1500" w:header="708" w:footer="708" w:gutter="0"/></w:sectPr></w:body></w:document>';
   const estilos = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Times New Roman" w:hAnsi="Times New Roman" w:cs="Times New Roman"/><w:sz w:val="24"/><w:szCs w:val="24"/><w:lang w:val="es-PE"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="160" w:line="300" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults></w:styles>';
@@ -1125,7 +1192,7 @@ function filasRegistroGeneral(cons) {
   return filas;
 }
 function filasDetalleClases(cons) {
-  const h = ['N.°', 'Apellidos y nombres'].concat(cons.ses.map(s => 'Clase ' + numeroClase(s) + ' ' + fechaCorta(s.fecha) + ' ' + (s.tipo === 'cotejo' ? '(cotejo)' : '(rúbrica)') + ' ' + s.comp + ' · ' + (CAP[s.cap] ? CAP[s.cap].corto : '')));
+  const h = ['N.°', 'Apellidos y nombres'].concat(cons.ses.map(s => 'Clase ' + numeroClase(s) + ' ' + fechaCorta(s.fecha) + ' ' + (s.tipo === 'cotejo' ? '(cotejo)' : '(rúbrica)') + ' ' + compsDe(s).join('+') + ' · ' + (CAP[s.cap] ? CAP[s.cap].corto : '')));
   const filas = [h];
   cons.ests.forEach((e, i) => {
     const r = cons.porEst[e.id];
@@ -1135,7 +1202,7 @@ function filasDetalleClases(cons) {
 }
 function filasPorTema(cons) {
   const temasUsados = []; const vistos = new Set();
-  cons.ses.forEach(s => { const k = s.temaId + '|' + s.comp; if (s.temaId && !vistos.has(k)) { vistos.add(k); temasUsados.push({ k, tema: dbGet('tema', s.temaId), comp: s.comp }); } });
+  cons.ses.forEach(s => compsDe(s).forEach(o => { const k = s.temaId + '|' + o; if (s.temaId && !vistos.has(k)) { vistos.add(k); temasUsados.push({ k, tema: dbGet('tema', s.temaId), comp: o }); } }));
   const h = ['N.°', 'Apellidos y nombres'].concat(temasUsados.map(t => (t.tema ? t.tema.nombre : 'Tema') + ' (' + COMP[t.comp].corto + ')'));
   const filas = [h];
   cons.ests.forEach((e, i) => filas.push([i + 1, nombreEst(e)].concat(temasUsados.map(t => cons.porEst[e.id].tema[t.k] || ''))));
@@ -1207,6 +1274,12 @@ const ICO = {
   engranaje: '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>'
 };
 
+const COMP_ABR = { O: 'Oral', L: 'Lee', E: 'Escr.' };
+/* Nivel de una clase: uno solo, o uno por competencia si la ficha tiene varias */
+function nivelesClaseHtml(s, x) {
+  const cs = compsDe(s); if (cs.length < 2 || !x) return lvHtml(x && x.lv);
+  return '<span class="lv-multi">' + cs.map(o => '<span title="' + esc(COMP[o].nombre) + '"><small>' + COMP_ABR[o] + '</small>' + lvHtml((x.porComp || {})[o] || null) + '</span>').join('') + '</span>';
+}
 function lvHtml(l, extra) { return '<span class="lv lv-' + (l || '0') + (extra ? ' ' + extra : '') + '">' + (l || '—') + '</span>'; }
 function opcSel(lista, val) { return lista.map(o => '<option value="' + esc(o[0]) + '"' + (String(o[0]) === String(val) ? ' selected' : '') + '>' + esc(o[1]) + '</option>').join(''); }
 function iniciales(e) { return ((e.ap || '?')[0] + ((e.no || '?')[0] || '')).toUpperCase(); }
@@ -1287,7 +1360,10 @@ function render(opts) {
     const v = VISTAS[partes[0] || 'inicio'] || VISTAS.inicio;
     try { html = v(partes, params); } catch (e) { console.error(e); html = cabecera({ atras: '#/' }) + '<main class="pag"><div class="aviso rojo">Ocurrió un error al mostrar esta pantalla: ' + esc(e.message) + '</div></main>'; }
   }
+  if (nueva && !opts.mantener) UI.fichaX = 0;
   app.innerHTML = html;
+  const fc = app.querySelector('.ficha-cuerpo');
+  if (fc && UI.fichaX) { fc.scrollLeft = UI.fichaX; const cab = app.querySelector('.ficha-cab'); if (cab) cab.scrollLeft = fc.scrollLeft; }
   if (nueva && !opts.mantener) {
     window.scrollTo(0, 0);
     const f = app.querySelector('[data-foco]');
@@ -1297,6 +1373,11 @@ function render(opts) {
 }
 function ir(h) { if (location.hash === h) render(); else location.hash = h; }
 
+/* Ficha y rúbrica: la cabecera de columnas se desplaza junto con las filas */
+document.addEventListener('scroll', e => {
+  const t = e.target; if (!t.classList || !t.classList.contains('ficha-cuerpo')) return;
+  UI.fichaX = t.scrollLeft; const cab = t.parentNode.querySelector('.ficha-cab'); if (cab) cab.scrollLeft = t.scrollLeft;
+}, true);
 /* ---------- Delegación de eventos ---------- */
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
@@ -1473,6 +1554,7 @@ VISTAS.aula = (p) => {
   const sesHoy = sesionesAula(aulaId, bim).filter(s => s.fecha === f);
   const cits = citaciones(c => c.aulaId === aulaId && c.fecha === f);
   const tomada = asistenciaTomada(aulaId, f);
+  const infs = informes(i => i.aulaId === aulaId && !i.enviada);
   const m = (h, k, t, d, cls) => '<a class="mosaico ' + (cls || '') + '" href="' + h + '" style="text-decoration:none"><span class="k">' + k + '</span><span><b>' + t + '</b><span class="d">' + d + '</span></span></a>';
   return cabecera({ atras: '#/', titulo: aulaNombre(aulaId), sub: ests.length + ' estudiantes · ' + cfg().area }) +
     '<main class="pag"><div class="tarjeta fila" style="gap:24px"><div class="col" style="gap:2px"><span class="muted peq">Hoy</span><b style="font-size:20px">' + esc(fechaMedia(f)) + (sesHoy.length ? ' · Clase ' + numeroClase(sesHoy[0]) : '') + '</b></div>' +
@@ -1485,7 +1567,9 @@ VISTAS.aula = (p) => {
     m('#/aula/' + aulaId + '/registros/general', 'Consultar', 'Registros', 'General, individual, por tema, estadísticas y mapa de calor.') +
     m('#/buscar?q=' + encodeURIComponent(a.grado + a.seccion), 'Buscar', 'Vista para padres', 'Busca un estudiante y muestra su historial completo.') +
     m('#/citaciones?aula=' + aulaId, 'Conducta', cits.length ? cits.length + (cits.length > 1 ? ' citaciones' : ' citación') + ' hoy' : 'Citaciones', cits.length ? (cits.every(c => c.enviada) ? 'Ya enviadas a tu correo.' : 'Se envían a tu correo al cerrar la clase.') : 'Historial de citaciones de la sección.', cits.length ? 'avi' : '') +
-    '</div>' + (cits.length && cits.some(c => !c.enviada) ? '<button class="btn prim" data-act="cerrarClase" data-aula="' + aulaId + '" style="align-self:flex-start">Cerrar la clase de hoy y enviar citaciones</button>' : '') + '</main>';
+    m('#/informes?aula=' + aulaId, 'Inasistencia', infs.length ? infs.length + ' informe' + (infs.length > 1 ? 's' : '') + ' por enviar' : 'Informes de inasistencia', infs.length ? 'Estudiantes no activos o con 2+ faltas seguidas. Se envían al cerrar la clase.' : 'No activos en la nómina y 2 o más faltas seguidas.', infs.length ? 'avi' : '') +
+    m('#/aula/' + aulaId + '/registros/asistencia', 'Consultar', 'Registro de asistencia', 'Todas las asistencias, faltas, tardanzas y estados del bimestre. Solo lectura.') +
+    '</div>' + ((cits.length && cits.some(c => !c.enviada)) || infs.length ? '<button class="btn prim" data-act="cerrarClase" data-aula="' + aulaId + '" style="align-self:flex-start">Cerrar la clase de hoy y enviar ' + (cits.some(c => !c.enviada) && infs.length ? 'citaciones e informes' : infs.length ? 'informes' : 'citaciones') + '</button>' : '') + '</main>';
 };
 
 /* ---------- Asistencia y conducta ---------- */
@@ -1548,7 +1632,9 @@ ACC.descGuardar = () => { const x = UI._desc; setAsistencia(x.aulaId, x.f, x.est
 ACC.cerrarClase = async d => {
   const aulaId = d.aula; const f = d.f || hoy();
   if (d.ses) { const s = dbGet('ses', d.ses); if (s) dbPut('ses', d.ses, Object.assign({}, s, { cerrada: Date.now() })); }
+  const nInf = await encolarInformes(aulaId);
   const n = await encolarCitacionesDelDia(aulaId, f);
+  if (!n && nInf) { avisoEnvio(nInf, 'informe(s) de inasistencia'); ir('#/informes?aula=' + aulaId); return; }
   if (!n) { toast('Clase cerrada.'); ir('#/aula/' + aulaId); programarSync(300); return; }
   if (!cfg().correo) { toast('Clase cerrada. Escribe tu correo en Ajustes › Datos para la citación para recibir las citaciones.', 'error'); }
   else if (!syncConfig()) toast('Clase cerrada. Configura el respaldo en Drive para que las citaciones lleguen a tu correo; mientras, puedes descargarlas.', 'error');
@@ -1622,11 +1708,11 @@ VISTAS.ses = (p) => {
     fld('elegirTema', 'Tema', tema ? tema.nombre : '', 'Elegir tema…', true) +
     fld('editarProducto', 'Producto de la clase', s.producto, 'Se carga con el tema') + '</div><div class="g2">' +
     fld('editarProposito', 'Propósito', s.proposito, 'Se carga con el tema') +
-    fld('elegirComp', 'Competencia', s.comp ? COMP[s.comp].nombre : '', 'Elegir competencia…', true) +
+    fld('elegirComp', compsDe(s).length > 1 ? 'Competencias (' + compsDe(s).length + ')' : 'Competencia', compsDe(s).length > 1 ? compsDe(s).map(o => COMP[o].corto).join(' · ') : (s.comp ? COMP[s.comp].nombre : ''), 'Elegir competencia…', true) +
     fld('elegirCap', capsDe(s).length > 1 ? 'Capacidades' : 'Capacidad', capsDe(s).length > 1 ? capsDe(s).map(k => CAP[k].nombre).join(' · ') : (s.cap ? CAP[s.cap].nombre : ''), 'Elegir capacidad…', true) + '</div>' +
     '<div class="chips"><span class="fld" style="min-height:0;border:0;background:none;padding:0"><span class="fl">Criterios</span></span>' +
     (s.crit || []).map((c, i) => '<span class="chip" title="' + esc(CAP[capDe(s, i)] ? CAP[capDe(s, i)].nombre : '') + '"><b>C' + (i + 1) + '</b> ' + esc(c) + (capsDe(s).length > 1 && CAP[capDe(s, i)] ? ' <span class="muted">· ' + esc(CAP[capDe(s, i)].corto) + '</span>' : '') + '</span>').join('') +
-    '<button class="btn chico punteado" data-act="elegirCrit" data-ses="' + s.id + '">' + ((s.crit || []).length ? 'Cambiar criterios' : '+ Elegir o escribir criterios') + '</button><span style="flex:1"></span><button class="btn chico peligro" data-act="borrarFicha" data-ses="' + s.id + '">Eliminar esta ficha</button></div></section>';
+    '<button class="btn chico punteado" data-act="elegirCrit" data-ses="' + s.id + '">' + ((s.crit || []).length ? 'Cambiar criterios' : '+ Elegir o escribir criterios') + '</button><span style="flex:1"></span><button class="btn chico peligro" data-act="borrarFicha" data-ses="' + s.id + '">Eliminar esta ficha</button></div>' + materialesDeFicha(s, tema) + '</section>';
   let cuerpo = '';
   if (!s.comp || !s.cap || !(s.crit || []).length) {
     cuerpo = '<div class="pag" style="padding-top:20px"><div class="aviso">Elige el tema (carga propósito, producto, competencia, capacidad y criterios) o complétalos para empezar a evaluar.</div></div>';
@@ -1636,7 +1722,7 @@ VISTAS.ses = (p) => {
     const ocultos = ests.length - vis.length;
     const anchoCrit = esCot ? 104 : 170;
     const c = cfg();
-    const cabRow = '<div class="frow cab-row"><span class="fnum">N.°</span><span>Estudiante · ' + vis.length + ' de ' + ests.length + (ocultos ? ' (' + ocultos + ' falta' + (ocultos > 1 ? 's' : '') + ' oculta' + (ocultos > 1 ? 's' : '') + ')' : '') + '</span>' +
+    const cabRow = '<div class="frow cab-row"><span class="fnum">N.°</span><span class="fn">Estudiante · ' + vis.length + ' de ' + ests.length + (ocultos ? ' (' + ocultos + ' falta' + (ocultos > 1 ? 's' : '') + ' oculta' + (ocultos > 1 ? 's' : '') + ')' : '') + '</span>' +
       '<span class="fcrits">' + s.crit.map((t, i) => '<span style="width:' + anchoCrit + 'px;text-align:center" title="' + esc(t) + '">C' + (i + 1) + '</span>').join('') + '</span><span>Participación</span><span>Nivel</span><span>Obs.</span></div>';
     const filas = vis.map(e => {
       const a = asistencia(s.aulaId, s.fecha, e.id); const n = nota(s.id, e.id);
@@ -1655,7 +1741,7 @@ VISTAS.ses = (p) => {
         '<button class="menos" data-act="restarPart" data-ses="' + s.id + '" data-est="' + e.id + '" title="Quitar la última participación (total: ' + tot + ')" aria-label="Quitar la última participación"' + (tot ? '' : ' disabled') + '>−</button></span>';
       const cambio = res.lv && res.base && res.lv !== res.base;
       const sube = cambio && NIVEL_NUM[res.lv] > NIVEL_NUM[res.base];
-      const resH = '<span class="fres" title="' + esc((res.motivos || []).join(', ')) + '">' + lvHtml(res.lv) + (cambio ? '<small class="motivo ' + (sube ? 'sube' : 'baja') + '">' + res.base + (sube ? ' ↑ ' : ' ↓ ') + (a.cond === 'C' && !sube ? 'conducta' : 'partic.') + '</small>' : '') + '</span>';
+      const resH = '<span class="fres" title="' + esc((res.motivos || []).join(', ')) + '">' + nivelesClaseHtml(s, res) + (cambio ? '<small class="motivo ' + (sube ? 'sube' : 'baja') + '">' + res.base + (sube ? ' ↑ ' : ' ↓ ') + (a.cond === 'C' && !sube ? 'conducta' : 'partic.') + '</small>' : '') + '</span>';
       const obs = '<button class="obs-btn' + (n.obs ? ' tiene' : '') + '" data-act="obsNota" data-ses="' + s.id + '" data-est="' + e.id + '" aria-label="Observación">' + ICO.globo + '</button>';
       const cls = 'frow' + (a.e === 'J' ? ' just' : '') + (a.cond === 'C' ? ' cond' : '');
       if (bloqueado) return '<div class="' + cls + '"><span class="fnum muted">' + numeroLista(e) + '</span><span class="fn"><b>' + esc(nombreEst(e)) + '</b>' + tag + tagC + '</span><span class="bloqueo">Falta justificada: no se califica para no equivocarse. <button class="btn chico" data-act="recuperar" data-ses="' + s.id + '" data-est="' + e.id + '">Recuperar nota</button></span><span></span>' + resH + '<span></span></div>';
@@ -1663,7 +1749,7 @@ VISTAS.ses = (p) => {
       const todo = faltan ? '<button class="todo-btn" data-act="todoSi" data-ses="' + s.id + '" data-est="' + e.id + '">' + (esCot ? 'Sí en los vacíos' : 'A en los vacíos') + '</button>' : '';
       return '<div class="' + cls + '"><span class="fnum muted">' + numeroLista(e) + '</span><span class="fn"><b>' + esc(nombreEst(e)) + '</b>' + tag + tagC + todo + '</span><span class="fcrits">' + crits + '</span>' + part + resH + obs + '</div>';
     }).join('');
-    cuerpo = '<div class="ficha-lista">' + cabRow + filas + '</div>' +
+    cuerpo = '<div class="ficha-lista"><div class="ficha-cab"><div class="ficha-filas">' + cabRow + '</div></div><div class="ficha-cuerpo"><div class="ficha-filas">' + filas + '</div></div></div>' +
       '<div class="pag"><div class="leyenda">' + (esCot ? '<span>Sí = A · No = C</span>' : '<span>AD=4 · A=3 · B=2 · C=1, se promedia</span>') + '<span>Participó bastante: desde ' + c.bastante + ' participaciones</span><span>Falta = C</span></div></div>';
   }
   const cerrar = '<button class="btn-claro" data-act="cerrarClase" data-aula="' + s.aulaId + '" data-f="' + s.fecha + '" data-ses="' + s.id + '">Cerrar clase</button>';
@@ -1749,8 +1835,8 @@ function pintarCriterios() {
   const lista = Array.from(new Set(x.sel.filter(t => x.capMap[t] === x.vista).concat(banco)));
   const fila = t => { const i = x.sel.indexOf(t); return '<button class="opcion' + (i >= 0 ? ' sel' : '') + '" data-act="togCrit" data-t="' + esc(t) + '"><span class="check">' + (i >= 0 ? (i + 1) : '') + '</span><span>' + esc(t) + '</span>' + (x.capMap[t] && x.capMap[t] !== x.vista ? '<span class="nota-op">' + esc(CAP[x.capMap[t]].corto) + '</span>' : '') + '</button>'; };
   abrirModal({ titulo: 'Criterios de la ficha', ancho: true, cuerpo:
-    '<p class="muted peq" style="margin:0">Toca para elegir, en el orden que tocas (máximo 8). Puedes combinar capacidades: cambia de capacidad aquí abajo.</p>' +
-    '<div class="chips">' + COMP[comp].caps.map(k => '<button class="btn chico' + (k.id === x.vista ? ' prim' : '') + '" data-act="vistaCap" data-c="' + k.id + '">' + esc(k.nombre.split(' ').slice(0, 3).join(' ')) + '</button>').join('') + '</div>' +
+    '<p class="muted peq" style="margin:0">Toca para elegir, en el orden que tocas (máximo 8). Puedes combinar capacidades y hasta 3 competencias: con varias competencias, la ficha da un nivel por cada una.</p>' +
+    COMPETENCIAS.map(c => '<div class="chips"><span class="etq" style="min-width:150px' + (c.id === comp ? ';color:var(--acento)' : '') + '">' + esc(c.corto) + '</span>' + c.caps.map(k => '<button class="btn chico' + (k.id === x.vista ? ' prim' : '') + '" data-act="vistaCap" data-c="' + k.id + '">' + esc(k.nombre.split(' ').slice(0, 3).join(' ')) + '</button>').join('') + '</div>').join('') +
     '<div class="etq">' + esc(CAP[x.vista].nombre) + '</div>' +
     (lista.length ? lista.map(fila).join('') : '<div class="aviso">Aún no hay criterios para esta capacidad en ' + esc(grado) + '.° grado. Escríbelos abajo o importa tu banco de criterios en Ajustes › Temario.</div>') +
     (elegidos.length ? '<div class="etq" style="margin-top:6px">Ya elegidos de otras capacidades</div>' + elegidos.map(fila).join('') : '') +
@@ -1808,13 +1894,14 @@ function selectorBim(base, bim) { return '<label class="oculto" for="selbim">Bim
 CAMBIO.irBim = (v, d) => ir(d.base + (d.base.includes('?') ? '&' : '?') + 'bim=' + v);
 
 /* ---------- Registros de la sección ---------- */
-const TABS_REG = [['general', 'Registro general'], ['individual', 'Registro individual'], ['competencias', 'Estadísticas por competencias, capacidades y criterios'], ['estudiante', 'Estadísticas por estudiante'], ['tema', 'Notas logradas por tema'], ['calor', 'Mapa de calor']];
+const TABS_REG = [['general', 'Registro general'], ['asistencia', 'Registro de asistencia'], ['individual', 'Registro individual'], ['competencias', 'Estadísticas por competencias, capacidades y criterios'], ['estudiante', 'Estadísticas por estudiante'], ['tema', 'Notas logradas por tema'], ['calor', 'Mapa de calor']];
 function vistaRegistros(aulaId, tab) {
   const bim = Number(UI.params.bim || bimestreDe(hoy()));
   const cons = consolidarAula(aulaId, bim);
   const base = '#/aula/' + aulaId + '/registros/' + tab;
   let cuerpo = '';
-  if (!cons.ses.length) cuerpo = '<div class="aviso">Aún no hay fichas ni rúbricas completas en el ' + romano(bim) + ' Bimestre.</div>';
+  if (tab === 'asistencia') cuerpo = regAsistencia(aulaId, bim);
+  else if (!cons.ses.length) cuerpo = '<div class="aviso">Aún no hay fichas ni rúbricas completas en el ' + romano(bim) + ' Bimestre.</div>';
   else if (tab === 'general') cuerpo = regGeneral(cons);
   else if (tab === 'individual') cuerpo = regIndividual(cons, aulaId, bim);
   else if (tab === 'competencias') cuerpo = regCompetencias(cons);
@@ -1870,7 +1957,7 @@ function fichaRegistroEstudiante(cons, estId, detalle) {
     c.caps.map(k => { const l = r.cap[k.id]; return '<div class="fila peq" style="flex-wrap:nowrap;gap:8px"><span style="flex:1">' + esc(k.nombre) + '</span><span class="mini-barra"><span style="width:' + (l ? NIVEL_NUM[l] * 25 : 0) + '%;background:' + (l ? COLOR_LV[l] : 'transparent') + '"></span></span><b style="width:26px;text-align:right">' + (l || '—') + '</b></div>'; }).join('') + '</div>').join('') + '</div>';
   if (detalle) {
     html += '<div class="tarjeta col"><h2 style="font-size:18px">Clases del bimestre</h2>' + cons.ses.map(s => { const x = r.clases[s.id]; const t = s.temaId && dbGet('tema', s.temaId);
-      return '<div class="fila" style="flex-wrap:nowrap;border-top:1px solid var(--linea);padding-top:8px">' + lvHtml(x.lv) + '<span style="flex:1;min-width:0"><b>Clase ' + numeroClase(s) + ' · ' + fechaCorta(s.fecha) + '</b> · ' + (s.tipo === 'cotejo' ? 'Cotejo' : 'Rúbrica') + ' · ' + esc(COMP[s.comp].corto) + ' › ' + esc(CAP[s.cap].corto) + (t ? ' · ' + esc(t.nombre) : '') + '<br><span class="muted peq">' + (x.estado === 'falta' ? 'Falta (cuenta C)' : x.estado === 'justificada' ? 'Falta justificada (no cuenta)' : x.estado === 'pendiente' ? 'Sin calificar' : x.estado === 'nomat' ? 'Aún no matriculado' : '') + esc((x.motivos || []).join(', ')) + (cons.notas.get(s.id + '|' + estId) && cons.notas.get(s.id + '|' + estId).obs ? ' · Obs.: ' + esc(cons.notas.get(s.id + '|' + estId).obs) : '') + '</span></span></div>'; }).join('') + '</div>';
+      return '<div class="fila" style="flex-wrap:nowrap;border-top:1px solid var(--linea);padding-top:8px">' + nivelesClaseHtml(s, x) + '<span style="flex:1;min-width:0"><b>Clase ' + numeroClase(s) + ' · ' + fechaCorta(s.fecha) + '</b> · ' + (s.tipo === 'cotejo' ? 'Cotejo' : 'Rúbrica') + ' · ' + esc(compsDe(s).map(o => COMP[o].corto).join(' + ')) + (compsDe(s).length > 1 ? '' : ' › ' + esc(CAP[s.cap].corto)) + (t ? ' · ' + esc(t.nombre) : '') + '<br><span class="muted peq">' + (x.estado === 'falta' ? 'Falta (cuenta C)' : x.estado === 'justificada' ? 'Falta justificada (no cuenta)' : x.estado === 'pendiente' ? 'Sin calificar' : x.estado === 'nomat' ? 'Aún no matriculado' : '') + esc((x.motivos || []).join(', ')) + (cons.notas.get(s.id + '|' + estId) && cons.notas.get(s.id + '|' + estId).obs ? ' · Obs.: ' + esc(cons.notas.get(s.id + '|' + estId).obs) : '') + '</span></span></div>'; }).join('') + '</div>';
   }
   return html;
 }
@@ -1924,14 +2011,14 @@ function estadisticasEstudiante(cons, estId) {
 }
 function regTema(cons) {
   const cols = []; const vistos = new Set();
-  cons.ses.forEach(s => { const k = s.temaId + '|' + s.comp; if (s.temaId && !vistos.has(k)) { vistos.add(k); cols.push({ k, tema: dbGet('tema', s.temaId), comp: s.comp }); } });
+  cons.ses.forEach(s => compsDe(s).forEach(o => { const k = s.temaId + '|' + o; if (s.temaId && !vistos.has(k)) { vistos.add(k); cols.push({ k, tema: dbGet('tema', s.temaId), comp: o }); } }));
   if (!cols.length) return '<div class="aviso">Las fichas de este bimestre aún no tienen tema asignado.</div>';
   const h = '<tr><th class="num">N.°</th><th class="nom">Estudiante</th>' + cols.map(c => '<th style="min-width:110px" title="' + esc(COMP[c.comp].nombre) + '">' + esc(c.tema ? c.tema.nombre : 'Tema') + '<br><span style="color:var(--acento)">' + esc(COMP[c.comp].corto) + '</span></th>').join('') + COMPETENCIAS.map(c => '<th style="color:var(--tinta)">' + esc(c.corto) + '</th>').join('') + '</tr>';
   const filas = cons.ests.map((e, i) => '<tr><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td>' + cols.map(c => '<td>' + lvHtml(cons.porEst[e.id].tema[c.k]) + '</td>').join('') + COMPETENCIAS.map(c => '<td class="compcol">' + lvHtml(cons.porEst[e.id].comp[c.id]) + '</td>').join('') + '</tr>').join('');
   return '<div class="tabla-caja"><table class="reg"><thead>' + h + '</thead><tbody>' + filas + '</tbody></table></div>' + leyendaNiveles();
 }
 function regCalor(cons) {
-  const h = '<tr><th></th>' + cons.ses.map(s => '<th title="' + fechaCorta(s.fecha) + ' · ' + esc(COMP[s.comp].corto) + '">' + numeroClase(s) + '<br>' + s.comp + '</th>').join('') + '</tr>';
+  const h = '<tr><th></th>' + cons.ses.map(s => '<th title="' + fechaCorta(s.fecha) + ' · ' + esc(compsDe(s).map(o => COMP[o].corto).join(' + ')) + '">' + numeroClase(s) + '<br>' + compsDe(s).join('+') + '</th>').join('') + '</tr>';
   const filas = cons.ests.map(e => '<tr><td class="n">' + esc(nombreEst(e)) + '</td>' + cons.ses.map(s => { const x = cons.porEst[e.id].clases[s.id];
     const cls = x.estado === 'falta' ? 'f' : !x.lv ? 'v' : ''; const cc = x.conducta === 'C' ? ' cc' : '';
     return '<td class="c ' + cls + cc + '" style="' + (x.lv && x.estado !== 'falta' ? 'background:' + COLOR_LV[x.lv] : '') + '" title="' + esc(nombreEst(e)) + ' · clase ' + numeroClase(s) + ': ' + (x.estado === 'falta' ? 'falta' : x.lv || 'sin nota') + '"></td>'; }).join('') + '</tr>').join('');
@@ -1987,7 +2074,7 @@ function estHistorialFichas(e, tipo, bim) {
   return ses.slice().reverse().map(s => {
     const n = nota(s.id, e.id); const r = calcularNivelClase(s, e.id); const t = s.temaId && dbGet('tema', s.temaId);
     const pc = { AD: 0, A: 0, B: 0, C: 0 }; (n.p || []).forEach(x => pc[x]++);
-    return '<div class="tarjeta col"><div class="fila" style="flex-wrap:nowrap;align-items:flex-start"><span class="col" style="gap:2px;flex:1"><b>Clase ' + numeroClase(s) + ' · ' + esc(fechaMedia(s.fecha)) + '</b><span class="muted peq">' + esc(t ? t.nombre + ' · ' : '') + esc(COMP[s.comp].corto) + ' › ' + esc(CAP[s.cap].nombre) + '</span></span>' + lvHtml(r.lv) + '</div>' +
+    return '<div class="tarjeta col"><div class="fila" style="flex-wrap:nowrap;align-items:flex-start"><span class="col" style="gap:2px;flex:1"><b>Clase ' + numeroClase(s) + ' · ' + esc(fechaMedia(s.fecha)) + '</b><span class="muted peq">' + esc(t ? t.nombre + ' · ' : '') + esc(compsDe(s).length > 1 ? compsDe(s).map(o => COMP[o].corto).join(' + ') : COMP[s.comp].corto + ' › ' + CAP[s.cap].nombre) + '</span></span>' + nivelesClaseHtml(s, r) + '</div>' +
       (r.estado === 'falta' ? '<div class="aviso rojo">Faltó a esta clase (cuenta como C).</div>' : r.estado === 'justificada' ? '<div class="aviso">Falta justificada: aún no recupera esta nota.</div>' :
       s.crit.map((c, i) => { const v = n.c[i]; const l = tipo === 'cotejo' ? (v === 'S' ? 'Sí' : v === 'N' ? 'No' : '—') : (v || '—'); const cl = tipo === 'cotejo' ? (v === 'S' ? 'A' : v === 'N' ? 'C' : '0') : (v || '0'); return '<div class="fila peq" style="flex-wrap:nowrap"><span style="flex:1">' + esc(c) + '</span><span class="lv lv-' + cl + '">' + l + '</span></div>'; }).join('') +
       '<div class="peq muted">Participaciones: ' + (n.p || []).length + (n.p && n.p.length ? ' (' + NIVELES.filter(l => pc[l]).map(l => l + ' ' + pc[l]).join(', ') + ')' : '') + ((r.motivos || []).length ? ' · ' + esc(r.motivos.join(', ')) : '') + (n.obs ? ' · Obs.: ' + esc(n.obs) : '') + '</div>') + '</div>';
@@ -2063,7 +2150,7 @@ function siagieProgreso(aulaId) {
   if (!datos.length) return '<div class="aviso">Aún no hay clases evaluadas en esta sección.</div>';
   const ests = estudiantes(aulaId);
   let h1 = '<tr><th class="num" rowspan="2">N.°</th><th class="nom" rowspan="2">Estudiante</th>', h2 = '<tr>';
-  const colsPorBim = datos.map(x => { const cols = []; const v = new Set(); x.cons.ses.forEach(s => { const k = s.temaId + '|' + s.comp; if (s.temaId && !v.has(k)) { v.add(k); cols.push({ k, tema: dbGet('tema', s.temaId), comp: s.comp }); } }); return cols; });
+  const colsPorBim = datos.map(x => { const cols = []; const v = new Set(); x.cons.ses.forEach(s => compsDe(s).forEach(o => { const k = s.temaId + '|' + o; if (s.temaId && !v.has(k)) { v.add(k); cols.push({ k, tema: dbGet('tema', s.temaId), comp: o }); } })); return cols; });
   datos.forEach((x, i) => { h1 += '<th class="grupo" colspan="' + (colsPorBim[i].length + 3) + '">' + romano(x.b) + ' Bimestre</th>'; colsPorBim[i].forEach(c => h2 += '<th style="min-width:96px">' + esc(c.tema ? c.tema.nombre : 'Tema') + '<br><span style="color:var(--acento)">' + c.comp + '</span></th>'); COMPETENCIAS.forEach(c => h2 += '<th style="color:var(--tinta)" title="' + esc(c.nombre) + '">' + c.id + '</th>'); });
   h1 += '</tr>'; h2 += '</tr>';
   const filas = ests.map((e, i) => '<tr><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td>' + datos.map((x, j) => { const r = x.cons.porEst[e.id] || { tema: {}, comp: {} }; return colsPorBim[j].map(c => '<td>' + lvHtml(r.tema[c.k]) + '</td>').join('') + COMPETENCIAS.map(c => '<td class="compcol">' + lvHtml(r.comp[c.id]) + '</td>').join(''); }).join('') + '</tr>').join('');
@@ -2075,7 +2162,7 @@ ACC.excelProgreso = d => exportarProgresoExcel(d.aula);
 /* =====================================================================
    INTERFAZ: AJUSTES
    ===================================================================== */
-const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['temario', 'Temario'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Patrón de la tableta'], ['apariencia', 'Apariencia'], ['reinicio', 'Reinicio (con respaldo)']];
+const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['nomina', 'Nómina oficial'], ['temario', 'Temario'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Patrón de la tableta'], ['apariencia', 'Apariencia'], ['reinicio', 'Borrar y reiniciar (con respaldo)']];
 VISTAS.ajustes = (p, q) => {
   const sec = p[1] || 'secciones';
   const menu = '<nav class="col" style="gap:6px;flex:1 1 240px;max-width:320px">' + SEC_AJ.map(s => '<a href="#/ajustes/' + s[0] + '" class="item" style="min-height:52px;text-decoration:none;font-weight:700;' + (s[0] === sec ? 'background:var(--acento);color:#fff' : 'color:' + (s[0] === 'reinicio' ? 'var(--peligro)' : 'inherit')) + '">' + s[1] + '</a>').join('') + '<div class="muted peq" style="padding:8px">Versión ' + APP_VERSION + '</div></nav>';
@@ -2119,7 +2206,7 @@ AJ.secciones = q => {
   if (sel) {
     const ests = estudiantes(sel, { incluirRetirados: true });
     html += '<div class="grid-2" style="align-items:start"><div class="tarjeta col"><h2 style="font-size:19px">Estudiantes de ' + esc(aulaNombre(sel)) + ' · ' + ests.filter(e => !e.retiro).length + '</h2><div class="lista">' +
-      (ests.length ? ests.map((e, i) => '<div class="item" style="background:var(--sup2);min-height:52px"><span class="muted" style="width:26px">' + (e.retiro ? '—' : i + 1) + '</span><span class="tx"><b style="font-size:15px">' + esc(nombreEst(e)) + '</b><span>' + (e.retiro ? 'Retirado desde ' + fechaCorta(e.retiro) : e.ingreso ? 'Desde ' + fechaCorta(e.ingreso) : '') + '</span></span><button class="btn chico" data-act="editarEst" data-id="' + e.id + '">Editar</button></div>').join('') : '<span class="muted">Aún no hay estudiantes.</span>') + '</div></div>' +
+      (ests.length ? ests.map((e, i) => '<div class="item" style="background:var(--sup2);min-height:52px"><span class="muted" style="width:26px">' + (e.retiro ? '—' : i + 1) + '</span><span class="tx"><b style="font-size:15px">' + esc(nombreEst(e)) + '</b><span>' + (e.retiro ? ESTADOS[estadoEst(e)] + ' desde ' + fechaCorta(e.retiro) : e.ingreso ? 'Desde ' + fechaCorta(e.ingreso) : '') + '</span></span><button class="btn chico" data-act="editarEst" data-id="' + e.id + '">Editar</button></div>').join('') : '<span class="muted">Aún no hay estudiantes.</span>') + '</div></div>' +
       '<div class="col"><form class="tarjeta col" data-envio="nuevoEst" data-aula="' + sel + '"><h2 style="font-size:19px">Agregar nuevo estudiante</h2><div class="campo"><label for="eap">Apellidos</label><input id="eap" class="inp" required></div><div class="campo"><label for="eno">Nombres</label><input id="eno" class="inp" required></div><div class="campo"><label for="ein">Fecha de ingreso</label><input id="ein" type="date" class="inp" value="' + hoy() + '"></div><p class="muted peq" style="margin:0;line-height:1.45">Se ordena de la A a la Z. Las clases anteriores a su ingreso no cuentan para su promedio y las notas de los demás no cambian.</p><button class="btn prim">Agregar a ' + esc(aulaNombre(sel)) + '</button></form>' +
       '<div class="tarjeta col"><h2 style="font-size:19px">Agregar varios a la vez</h2><div class="campo"><label for="lote">Pega la lista (uno por línea: «Apellidos, Nombres»)</label><textarea id="lote" class="inp" placeholder="Álvarez Quispe, Camila&#10;Benites Huamán, Jorge"></textarea></div><div class="fila"><button class="btn" data-act="loteEst" data-aula="' + sel + '">Agregar la lista</button><label class="btn" for="xlsEst" style="cursor:pointer">Importar de Excel</label><input id="xlsEst" type="file" accept=".xlsx,.xls,.csv" class="oculto" data-cambio="importarEst" data-aula="' + sel + '"></div><p class="muted peq" style="margin:0">En Excel: la primera columna con los nombres completos, o dos columnas «Apellidos» y «Nombres».</p></div></div></div>';
   }
@@ -2170,11 +2257,11 @@ CAMBIO.importarEst = async (v, d, el) => {
 };
 ACC.editarEst = d => {
   const e = dbGet('est', d.id); UI._est = d.id;
-  abrirModal({ titulo: 'Editar estudiante', cuerpo: '<div class="campo"><label for="xap">Apellidos</label><input id="xap" class="inp" value="' + esc(e.ap) + '"></div><div class="campo"><label for="xno">Nombres</label><input id="xno" class="inp" value="' + esc(e.no) + '"></div><div class="campo"><label for="xin">Fecha de ingreso (vacío = desde el inicio)</label><input id="xin" type="date" class="inp" value="' + esc(e.ingreso || '') + '"></div><div class="campo"><label for="xre">Retirado desde (vacío = sigue en la sección)</label><input id="xre" type="date" class="inp" value="' + esc(e.retiro || '') + '"></div>',
+  abrirModal({ titulo: 'Editar estudiante', cuerpo: '<div class="campo"><label for="xap">Apellidos</label><input id="xap" class="inp" value="' + esc(e.ap) + '"></div><div class="campo"><label for="xno">Nombres</label><input id="xno" class="inp" value="' + esc(e.no) + '"></div><div class="campo"><label for="xin">Fecha de ingreso (vacío = desde el inicio)</label><input id="xin" type="date" class="inp" value="' + esc(e.ingreso || '') + '"></div><p class="muted peq" style="margin:0">Para marcar trasladado, retirado o no asiste, usa <b>Ajustes › Nómina oficial</b>.</p>',
     pie: '<button class="btn peligro" data-act="borrarEst">Eliminar</button><span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarEst">Guardar</button>' });
 };
-ACC.guardarEst = () => { const e = dbGet('est', UI._est); dbPut('est', UI._est, Object.assign({}, e, { ap: document.getElementById('xap').value.trim(), no: document.getElementById('xno').value.trim(), ingreso: document.getElementById('xin').value, retiro: document.getElementById('xre').value })); cerrarModal(); programarSync(); render(); };
-ACC.borrarEst = () => { const id = UI._est; confirmar('Eliminar estudiante', 'Se quitará de la lista. Si se retiró del colegio, mejor marca «Retirado desde» para conservar su historial.', 'Eliminar', () => { dbDel('est', id); programarSync(); render(); }, true); };
+ACC.guardarEst = () => { const e = dbGet('est', UI._est); dbPut('est', UI._est, Object.assign({}, e, { ap: document.getElementById('xap').value.trim(), no: document.getElementById('xno').value.trim(), ingreso: document.getElementById('xin').value })); cerrarModal(); programarSync(); render(); };
+ACC.borrarEst = () => { const id = UI._est; confirmar('Eliminar estudiante', 'Se quitará de la lista. Si se trasladó o se retiró, mejor márcalo en «Nómina oficial» para conservar su historial.', 'Eliminar', () => { dbDel('est', id); programarSync(); render(); }, true); };
 
 /* ---------- Temario ---------- */
 AJ.temario = q => {
@@ -2182,8 +2269,9 @@ AJ.temario = q => {
   const g = q.g || grados[0] || '2'; const b = Number(q.b || bimestreDe(hoy()));
   const ls = temas(t => String(t.grado) === g && Number(t.bim) === b);
   return '<h1 style="font-size:26px">Temario</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/temario?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/temario?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
+    '<div class="tarjeta col" style="gap:8px">' + bloqueMateriales(matsGrado(g), { nivel: 'grado', grado: g }, 'Documentos de ' + g + '.° grado (programación anual, experiencias de aprendizaje…)', 'Aún no hay enlaces.') + '</div>' +
     (ls.length ? '<div class="fila"><span class="muted peq" style="flex:1">' + ls.length + ' temas · toca un tema para ver su propósito, producto, capacidades y criterios</span><button class="btn chico" data-act="abrirTodos">Abrir todos</button><button class="btn chico" data-act="cerrarTodos">Cerrar todos</button></div>' : '') +
-    '<div class="lista">' + (ls.length ? (() => { let u = null; return ls.map(t => { const cab = (t.unidad || '') !== u && ls.some(x => x.unidad) ? '<h2 style="font-size:19px;margin-top:8px">' + esc(etiquetaUnidad(t)) + ' · ' + ls.filter(x => (x.unidad || '') === (t.unidad || '')).length + ' temas</h2>' : ''; u = t.unidad || ''; return cab + fichaTema(t); }).join(''); })() : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
+    '<div class="lista">' + (ls.length ? (() => { let u = null; return ls.map(t => { const cab = (t.unidad || '') !== u && ls.some(x => x.unidad) ? '<h2 style="font-size:19px;margin-top:8px">' + esc(etiquetaUnidad(t)) + ' · ' + ls.filter(x => (x.unidad || '') === (t.unidad || '')).length + ' temas</h2>' + bloqueMateriales(matsUnidad(g, b, t.unidad || ''), { nivel: 'unidad', grado: g, bim: b, unidad: t.unidad || '' }, '', '') : ''; u = t.unidad || ''; return cab + fichaTema(t); }).join(''); })() : '<div class="aviso">No hay temas para ' + g + '.° grado en el ' + romano(b) + ' Bimestre.</div>') + '</div>' +
     '<div class="fila"><button class="btn prim" data-act="nuevoTema" data-g="' + g + '" data-b="' + b + '">+ Agregar tema</button><span style="flex:1"></span>' + (ls.length ? '<button class="btn peligro" data-act="borrarTemas" data-g="' + g + '" data-b="' + b + '">Borrar los ' + ls.length + ' temas de ' + g + '.° grado · ' + romano(b) + ' Bim.</button>' : '') + '</div>' +
     '<div class="tarjeta col"><h2 style="font-size:19px">Cargar desde Excel</h2>' +
     '<p class="muted peq" style="margin:0;line-height:1.5">Temario: una fila por criterio, con las columnas Grado, Bimestre, Unidad, N.° sesión, Tema, Propósito, Producto de la clase, Competencia, Capacidad y Criterio. Si vuelves a importar, los temas con el mismo nombre se actualizan y no se duplican.</p>' +
@@ -2194,18 +2282,20 @@ AJ.temario = q => {
 function fichaTema(t) {
   const caps = capsDe(t);
   const usado = sesiones(x => x.temaId === t.id).length;
-  return '<details class="tarjeta tema-det" style="padding:0">' +
+  const mats = matsTema(t.id);
+  return '<details class="tarjeta tema-det" data-id="' + t.id + '" style="padding:0">' +
     '<summary style="list-style:none;cursor:pointer;padding:14px 18px;display:flex;gap:12px;align-items:center">' +
     '<span class="ini" style="flex-shrink:0">' + (t.orden && t.orden < 100 ? t.orden : '•') + '</span>' +
     '<span class="tx" style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><b style="font-size:17px">' + esc(t.nombre) + '</b>' +
-    '<span class="muted peq">' + esc(COMP[t.comp] ? COMP[t.comp].corto : '—') + ' · ' + caps.length + ' capacidad' + (caps.length === 1 ? '' : 'es') + ' · ' + (t.crit || []).length + ' criterios' + (usado ? ' · usado en ' + usado + ' ficha' + (usado > 1 ? 's' : '') : '') + '</span></span>' +
+    '<span class="muted peq">' + esc(compsDe(t).length ? compsDe(t).map(o => COMP[o].corto).join(' + ') : '—') + ' · ' + caps.length + ' capacidad' + (caps.length === 1 ? '' : 'es') + ' · ' + (t.crit || []).length + ' criterios' + (usado ? ' · usado en ' + usado + ' ficha' + (usado > 1 ? 's' : '') : '') + (mats.length ? ' · ' + mats.length + ' material' + (mats.length > 1 ? 'es' : '') : '') + '</span></span>' +
     '<span class="muted" aria-hidden="true">▾</span></summary>' +
     '<div class="col" style="padding:0 18px 16px;gap:10px;border-top:1px solid var(--linea)">' +
     '<div style="padding-top:12px"><span class="etq">Propósito</span><div>' + esc(t.proposito || '—') + '</div></div>' +
     '<div><span class="etq">Producto de la clase</span><div>' + esc(t.producto || '—') + '</div></div>' +
-    '<div><span class="etq">Competencia</span><div>' + esc(COMP[t.comp] ? COMP[t.comp].nombre : '—') + '</div></div>' +
+    '<div><span class="etq">' + (compsDe(t).length > 1 ? 'Competencias' : 'Competencia') + '</span><div>' + (compsDe(t).length ? compsDe(t).map(o => esc(COMP[o].nombre)).join('<br>') : '—') + '</div></div>' +
     caps.map(k => '<div><span class="etq">' + esc(CAP[k].nombre) + '</span><ol style="margin:4px 0 0;padding-left:22px;line-height:1.45">' +
       (t.crit || []).map((c, i) => capDe(t, i) === k ? '<li value="' + (i + 1) + '">' + esc(c) + '</li>' : '').join('') + '</ol></div>').join('') +
+    bloqueMateriales(mats, { nivel: 'tema', tema: t.id }, 'Materiales de la sesión (sesión de aprendizaje, PPT, fichas…)', 'Aún no hay enlaces.') +
     '<div><button class="btn chico" data-act="editarTema" data-id="' + t.id + '">Editar tema</button></div></div></details>';
 }
 ACC.abrirTodos = () => document.querySelectorAll('.tema-det').forEach(d => d.open = true);
@@ -2285,17 +2375,33 @@ function abrirFormTema(t, sesId) {
     '<div class="campo"><label for="tn">Tema</label><input id="tn" class="inp" value="' + esc(t.nombre) + '" autofocus></div>' +
     '<div class="campo"><label for="tp">Propósito</label><textarea id="tp" class="inp" style="min-height:70px">' + esc(t.proposito) + '</textarea></div>' +
     '<div class="campo"><label for="tpr">Producto de la clase</label><input id="tpr" class="inp" value="' + esc(t.producto) + '"></div>' +
-    '<div class="campo"><label for="tc">Competencia y capacidad que van con el tema</label><select id="tc" class="inp"><option value="">Elegir…</option>' + caps(t.cap) + '</select></div>' +
-    '<div class="campo"><label for="tcr">Criterios de evaluación (uno por línea)</label><textarea id="tcr" class="inp" style="min-height:130px">' + esc((t.crit || []).join('\n')) + '</textarea></div>',
+    editorCompTema(t),
     pie: (t.id ? '<button class="btn peligro" data-act="borrarTema">Eliminar</button><span style="flex:1"></span>' : '') + '<button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarTema">' + (sesId ? 'Guardar y usar en la ficha' : 'Guardar tema') + '</button>' });
 }
+/* Competencias del tema (1, 2 o 3), cada una con sus criterios y la capacidad de cada criterio */
+function editorCompTema(t) {
+  const usadas = (t.crit || []).length ? compsDe(t) : (t.comp ? [t.comp] : []);
+  const filaCrit = (c, cap, txt) => '<div class="fila crit-fila" style="flex-wrap:nowrap;gap:6px"><select class="inp tc-cap" style="max-width:210px;flex-shrink:0" aria-label="Capacidad">' + COMP[c].caps.map(k => '<option value="' + k.id + '"' + (k.id === cap ? ' selected' : '') + '>' + esc(k.nombre) + '</option>').join('') + '</select><input class="inp tc-txt" value="' + esc(txt || '') + '" placeholder="Criterio de evaluación" aria-label="Criterio"><button type="button" class="btn chico" data-act="temaQuitarFila" aria-label="Quitar criterio">×</button></div>';
+  UI._filaCrit = filaCrit;
+  return '<div class="campo"><span class="etq">Competencias del tema (puedes marcar 1, 2 o 3)</span><div class="fila">' + COMPETENCIAS.map(c => '<label class="fila" style="gap:8px;border:1px solid var(--linea2);border-radius:10px;padding:8px 12px;min-height:44px"><input type="checkbox" class="tc-comp" value="' + c.id + '" data-cambio="temaComp" style="width:22px;height:22px"' + (usadas.includes(c.id) ? ' checked' : '') + '> ' + esc(c.corto) + '</label>').join('') + '</div></div>' +
+    COMPETENCIAS.map(c => { const filas = (t.crit || []).map((x, i) => compDe(t, i) === c.id ? filaCrit(c.id, capDe(t, i), x) : '').join('');
+      return '<div class="tarjeta col tc-blq" data-c="' + c.id + '" style="gap:8px;background:var(--sup2);' + (usadas.includes(c.id) ? '' : 'display:none') + '"><b>' + esc(c.nombre) + '</b><div class="col tc-filas" style="gap:6px">' + (filas || filaCrit(c.id, c.id === t.comp ? t.cap : c.caps[0].id, '')) + '</div><button type="button" class="btn chico punteado" style="align-self:flex-start" data-act="temaFila" data-c="' + c.id + '">+ Criterio</button></div>'; }).join('') +
+    '<p class="muted peq" style="margin:0">Con varias competencias, la ficha y la rúbrica darán un nivel por cada competencia, y cada criterio cuenta solo para la suya.</p>';
+}
+CAMBIO.temaComp = (v, d, el) => { const b = document.querySelector('.tc-blq[data-c="' + el.value + '"]'); if (b) b.style.display = el.checked ? '' : 'none'; };
+ACC.temaFila = d => { const b = document.querySelector('.tc-blq[data-c="' + d.c + '"] .tc-filas'); if (!b) return; b.insertAdjacentHTML('beforeend', UI._filaCrit(d.c, COMP[d.c].caps[0].id, '')); const i = b.querySelectorAll('.tc-txt'); i[i.length - 1].focus(); };
+ACC.temaQuitarFila = (d, el) => { const f = el.closest('.crit-fila'); const b = f.parentNode; if (b.querySelectorAll('.crit-fila').length > 1) f.remove(); else f.querySelector('.tc-txt').value = ''; };
 ACC.guardarTema = () => {
-  const x = UI._tema; const cap = document.getElementById('tc').value; const nombre = document.getElementById('tn').value.trim();
-  if (!nombre || !cap) { toast('Escribe el tema y elige la capacidad.', 'error'); return; }
-  const v = { grado: document.getElementById('tg').value, bim: Number(document.getElementById('tb').value), nombre, proposito: document.getElementById('tp').value.trim(), producto: document.getElementById('tpr').value.trim(), cap, comp: CAP[cap].comp, crit: document.getElementById('tcr').value.split('\n').map(s => s.trim()).filter(Boolean), orden: Date.now(), unidad: document.getElementById('tu').value.trim() };
+  const x = UI._tema; const nombre = document.getElementById('tn').value.trim();
+  const comps = Array.from(document.querySelectorAll('.tc-comp:checked')).map(i => i.value);
+  if (!nombre || !comps.length) { toast('Escribe el tema y marca al menos una competencia.', 'error'); return; }
+  const crit = [], critCap = []; let capVacia = null;
+  comps.forEach(c => document.querySelectorAll('.tc-blq[data-c="' + c + '"] .crit-fila').forEach(f => { const t = f.querySelector('.tc-txt').value.trim(); const k = f.querySelector('.tc-cap').value; if (t) { crit.push(t); critCap.push(k); } else if (!capVacia) capVacia = k; }));
+  const cuenta = {}; critCap.forEach(k => cuenta[k] = (cuenta[k] || 0) + 1);
+  const cap = Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a])[0] || capVacia || COMP[comps[0]].caps[0].id;
+  const v = { grado: document.getElementById('tg').value, bim: Number(document.getElementById('tb').value), nombre, proposito: document.getElementById('tp').value.trim(), producto: document.getElementById('tpr').value.trim(), cap, comp: CAP[cap].comp, crit, critCap, orden: Date.now(), unidad: document.getElementById('tu').value.trim() };
   const id = x.id || uid(); const previo = x.id ? Object.assign({ id }, dbGet('tema', id)) : null;
   if (previo && previo.orden) v.orden = previo.orden;
-  v.critCap = v.crit.map(t => { if (!previo) return cap; const i = (previo.crit || []).findIndex(y => norm(y) === norm(t)); return i >= 0 ? capDe(previo, i) : cap; });
   dbPut('tema', id, Object.assign({}, previo || {}, v));
   cerrarModal(); programarSync();
   if (x.ses) { ACC.ponerTema({ ses: x.ses, tema: id }); return; }
@@ -2338,7 +2444,7 @@ ACC.quitarSync = () => confirmar('Desconectar respaldo', 'Los datos se seguirán
 ACC.bajarRespaldo = () => exportarRespaldo();
 CAMBIO.restaurar = async (v, d, el) => {
   const f = el.files[0]; if (!f) return;
-  try { const j = JSON.parse(await f.text()); if (!j.recs) throw new Error('Archivo no válido'); const n = dbFusionar(j.recs, true); toast(n + ' registros restaurados.'); programarSync(); render(); } catch (e) { toast('No se pudo leer el respaldo: ' + e.message, 'error'); }
+  try { const j = JSON.parse(await f.text()); if (!j.recs) throw new Error('Archivo no válido'); const lista = Array.isArray(j.recs) ? j.recs : Object.keys(j.recs).map(k => Object.assign({ k }, j.recs[k])); const n = restaurarRegistros(lista); toast(n + ' registros restaurados.'); programarSync(); render(); } catch (e) { toast('No se pudo leer el respaldo: ' + e.message, 'error'); }
 };
 
 /* ---------- Patrón ---------- */
@@ -2363,16 +2469,106 @@ ACC.ponerTemaVisual = d => { DB.meta.tema = d.v; guardarMeta(); aplicarTemaVisua
 function aplicarTemaVisual() { aplicarDiseno(); const t = DB.meta.tema; if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t); else document.documentElement.removeAttribute('data-theme'); }
 
 /* ---------- Reinicio ---------- */
-AJ.reinicio = () => '<h1 style="font-size:26px;color:var(--peligro)">Reinicio</h1><form class="tarjeta col" data-envio="reiniciar" style="line-height:1.5"><p style="margin:0">Borra toda la información cargada (asistencia, fichas, rúbricas, conducta, citaciones' + ' y, si quieres, secciones y temario). Antes se descarga un <b>respaldo completo</b> y, si está conectado, Drive guarda otra copia.</p>' +
-  '<label class="fila" style="gap:10px"><input type="checkbox" id="rkeep" style="width:24px;height:24px" checked> Conservar secciones, estudiantes y temario</label>' +
-  '<div class="campo"><label for="rpass">Tu contraseña</label><input id="rpass" type="password" class="inp" required></div><div class="campo"><label for="rconf">Escribe BORRAR para confirmar</label><input id="rconf" class="inp" required autocapitalize="characters"></div>' +
-  '<button class="btn peligro lleno" style="align-self:flex-start">Descargar respaldo y reiniciar</button></form>';
-ACC.reiniciar = async () => {
+const BORRABLES = [['cotejo', 'Fichas de cotejo y sus notas'], ['rubrica', 'Rúbricas y sus notas'], ['asis', 'Asistencia, tardanzas y conducta (con sus citaciones)'], ['siagie', 'Notas ajustadas a mano y conclusiones de SIAGIE'], ['tema', 'Temas del temario']];
+function respaldoVigente() { return UI.respaldoHecho && Date.now() - UI.respaldoHecho < 20 * 60000; }
+AJ.reinicio = () => {
+  const ok = respaldoVigente();
+  const pasoResp = '<div class="tarjeta col" style="line-height:1.5"><h2 style="font-size:19px">Paso 1 · Respaldo obligatorio</h2>' +
+    (ok ? '<div class="aviso verde">Respaldo hecho (' + new Date(UI.respaldoHecho).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) + '). Ya puedes borrar (vale por 20 minutos).' + (UI.respaldoDrive ? '<br>Copia en tu Drive: carpeta «Registro Auxiliar - Datos › Respaldos», archivo ' + esc(UI.respaldoDrive) + '.' : UI.respaldoDrive === '' ? '<br>La copia en Drive no se hizo: actualiza el código de Apps Script (Code.gs). El archivo descargado sí está listo.' : '') + '</div>'
+      : '<p style="margin:0">Antes de borrar cualquier cosa se descarga un archivo con <b>todo</b> tu registro' + (syncConfig() ? ' y se guarda otra copia igual en tu Drive' : '') + '. Si te equivocas, lo recuperas en <b>Respaldo en Google Drive › Restaurar desde un respaldo</b>.</p>') +
+    '<button class="btn' + (ok ? '' : ' prim') + '" style="align-self:flex-start" data-act="respaldoPrevio">' + (ok ? 'Descargar otro respaldo' : 'Hacer el respaldo ahora') + '</button></div>';
+  const aulasOp = '<option value="">Todas las secciones</option>' + aulas().map(a => '<option value="' + a.id + '">' + esc(aulaNombre(a.id)) + '</option>').join('');
+  const parcial = '<form class="tarjeta col" data-envio="borrarPartes" style="line-height:1.5"><h2 style="font-size:19px">Borrar selección</h2>' +
+    '<div class="fila" style="gap:12px;align-items:flex-end;flex-wrap:wrap"><div class="campo" style="flex:1 1 200px"><label for="bpA">Sección</label><select id="bpA" class="inp" data-cambio="prevBorrar">' + aulasOp + '</select></div>' +
+    '<div class="campo" style="flex:1 1 200px"><label for="bpP">Periodo</label><select id="bpP" class="inp" data-cambio="prevBorrar"><option value="">Todo el año</option><option value="b1">I Bimestre</option><option value="b2">II Bimestre</option><option value="b3">III Bimestre</option><option value="b4">IV Bimestre</option><option value="rango">Entre dos fechas…</option></select></div></div>' +
+    '<div class="fila" id="bpRango" style="gap:12px;display:none"><div class="campo" style="flex:1"><label for="bpD">Desde</label><input id="bpD" type="date" class="inp" data-cambio="prevBorrar"></div><div class="campo" style="flex:1"><label for="bpH">Hasta</label><input id="bpH" type="date" class="inp" data-cambio="prevBorrar"></div></div>' +
+    '<div class="col" style="gap:8px"><b>¿Qué quieres borrar?</b>' + BORRABLES.map(b => '<label class="fila" style="gap:10px"><input type="checkbox" class="bpQ" value="' + b[0] + '" style="width:24px;height:24px" data-cambio="prevBorrar"> ' + b[1] + '</label>').join('') + '</div>' +
+    '<div id="bpPrev" class="aviso">Marca qué quieres borrar para ver cuánto se borrará.</div>' +
+    '<div class="campo"><label for="bpPass">Tu contraseña</label><input id="bpPass" type="password" class="inp"></div>' +
+    '<button class="btn peligro lleno" style="align-self:flex-start"' + (ok ? '' : ' disabled title="Primero haz el respaldo (paso 1)"') + '>Borrar selección</button>' + (ok ? '' : '<span class="muted peq">Se activa cuando hagas el respaldo del paso 1.</span>') + '</form>';
+  const total = '<form class="tarjeta col" data-envio="reiniciar" style="line-height:1.5"><h2 style="font-size:19px;color:var(--peligro)">Reinicio completo</h2><p style="margin:0">Borra toda la información cargada (asistencia, fichas, rúbricas, conducta, citaciones y, si quieres, secciones y temario).</p>' +
+    '<label class="fila" style="gap:10px"><input type="checkbox" id="rkeep" style="width:24px;height:24px" checked> Conservar secciones, estudiantes y temario</label>' +
+    '<div class="campo"><label for="rpass">Tu contraseña</label><input id="rpass" type="password" class="inp"></div>' +
+    '<button class="btn peligro lleno" style="align-self:flex-start"' + (ok ? '' : ' disabled title="Primero haz el respaldo (paso 1)"') + '>Borrado y reinicio completo</button></form>';
+  return '<h1 style="font-size:26px;color:var(--peligro)">Borrar y reiniciar</h1>' + pasoResp + parcial + total;
+};
+ACC.respaldoPrevio = async () => {
+  if (syncConfig()) {
+    if (!navigator.onLine) { toast('Conéctate a internet: primero hay que guardar en Drive lo último que hiciste.', 'error'); return; }
+    const r = await sincronizar({ accion: 'copia' }); if (!r.ok) { toast('No se pudo guardar en Drive: ' + r.motivo + '. Inténtalo de nuevo.', 'error'); return; }
+    UI.respaldoDrive = (r.respuesta && r.respuesta.copia) || '';
+  } else UI.respaldoDrive = null;
+  exportarRespaldo(); UI.respaldoHecho = Date.now();
+  toast(UI.respaldoDrive ? 'Respaldo descargado y guardado en tu Drive.' : 'Respaldo descargado. Guárdalo bien.'); render({ mantener: true });
+};
+/* Qué registros se borrarían con los filtros elegidos */
+function seleccionBorrar() {
+  const v = id => (document.getElementById(id) || {}).value || '';
+  const aula = v('bpA'), per = v('bpP'), d = v('bpD'), h = v('bpH');
+  const que = Array.from(document.querySelectorAll('.bpQ:checked')).map(x => x.value);
+  const bim = /^b\d$/.test(per) ? Number(per[1]) : 0, rango = per === 'rango';
+  const enFecha = f => rango ? (!!d && !!h && f >= d && f <= h) : bim ? bimestreDe(f) === bim : true;
+  const enAula = a => !aula || a === aula;
+  const r = { ses: [], notas: 0, asis: [], asisdia: [], cit: [], ajuste: [], concl: [], tema: [], avisos: [] };
+  if (rango && (!d || !h)) { r.avisos.push('Elige las dos fechas.'); return { r, que, ok: false }; }
+  ['cotejo', 'rubrica'].forEach(t => { if (que.includes(t)) sesiones(s => s.tipo === t && enAula(s.aulaId) && (bim ? s.bim === bim : enFecha(s.fecha))).forEach(s => { r.ses.push(s.id); r.notas += notasDeSesion(s.id).length; }); });
+  if (que.includes('asis')) {
+    r.asis = dbList('asis').filter(a => enAula(a.aulaId) && enFecha(a.fecha)).map(a => a.id);
+    r.asisdia = dbList('asisdia').filter(a => enAula(a.aulaId) && enFecha(a.fecha)).map(a => a.id);
+    r.cit = citaciones(c => enAula(c.aulaId) && enFecha(c.fecha)).map(c => c.id);
+  }
+  if (que.includes('siagie')) {
+    if (rango) r.avisos.push('Las notas ajustadas y conclusiones se borran por bimestre, no entre fechas.');
+    else { const k = x => { const p = x.id.split('|'); return enAula(p[0]) && (!bim || Number(p[1]) === bim); }; r.ajuste = dbList('ajuste').filter(k).map(x => x.id); r.concl = dbList('concl').filter(k).map(x => x.id); }
+  }
+  if (que.includes('tema')) {
+    if (rango) r.avisos.push('Los temas se borran por bimestre, no entre fechas.');
+    else { const grados = aula ? [String((dbGet('aula', aula) || {}).grado)] : null; r.tema = temas(t => (!grados || grados.includes(String(t.grado))) && (!bim || Number(t.bim) === bim)).map(t => t.id);
+      if (aula && r.tema.length) r.avisos.push('Los temas son de todo el ' + (dbGet('aula', aula) || {}).grado + '.° grado: se quitan también de las otras secciones de ese grado.'); }
+  }
+  return { r, que, ok: true };
+}
+CAMBIO.prevBorrar = () => {
+  const rg = document.getElementById('bpRango'); if (rg) rg.style.display = document.getElementById('bpP').value === 'rango' ? 'flex' : 'none';
+  const { r, que } = seleccionBorrar(); const el = document.getElementById('bpPrev'); if (!el) return;
+  if (!que.length) { el.className = 'aviso'; el.innerHTML = 'Marca qué quieres borrar para ver cuánto se borrará.'; return; }
+  const nCot = r.ses.filter(id => (dbGet('ses', id) || {}).tipo === 'cotejo').length, nRub = r.ses.length - nCot;
+  const partes = [];
+  if (que.includes('cotejo')) partes.push(nCot + ' ficha' + (nCot === 1 ? '' : 's') + ' de cotejo');
+  if (que.includes('rubrica')) partes.push(nRub + ' rúbrica' + (nRub === 1 ? '' : 's'));
+  if (r.ses.length) partes.push(r.notas + ' calificaciones de estudiantes');
+  if (que.includes('asis')) partes.push(r.asisdia.length + ' día' + (r.asisdia.length === 1 ? '' : 's') + ' de asistencia (' + r.asis.length + ' marcas) y ' + r.cit.length + ' citación' + (r.cit.length === 1 ? '' : 'es'));
+  if (que.includes('siagie') && !r.avisos.some(a => a.startsWith('Las notas'))) partes.push(r.ajuste.length + ' nota' + (r.ajuste.length === 1 ? '' : 's') + ' ajustada' + (r.ajuste.length === 1 ? '' : 's') + ' y ' + r.concl.length + ' conclusión' + (r.concl.length === 1 ? '' : 'es'));
+  if (que.includes('tema') && !r.avisos.some(a => a.startsWith('Los temas se'))) partes.push(r.tema.length + ' tema' + (r.tema.length === 1 ? '' : 's'));
+  el.className = 'aviso rojo'; el.innerHTML = '<b>Se borrará:</b> ' + esc(partes.join(' · ')) + '.' + (r.avisos.length ? '<br>' + r.avisos.map(esc).join('<br>') : '');
+};
+ACC.borrarPartes = async () => {
+  if (!respaldoVigente()) { toast('Primero haz el respaldo (paso 1).', 'error'); return; }
+  const { r, que, ok } = seleccionBorrar();
+  if (!que.length) { toast('Marca qué quieres borrar.', 'error'); return; }
+  if (!ok) { toast(r.avisos[0], 'error'); return; }
+  const n = r.ses.length + r.asis.length + r.asisdia.length + r.cit.length + r.ajuste.length + r.concl.length + r.tema.length;
+  if (!n) { toast('Con esos filtros no hay nada que borrar.', 'error'); return; }
   const a = dbGet('cfg', 'auth');
-  if (document.getElementById('rconf').value.trim().toUpperCase() !== 'BORRAR') { toast('Escribe BORRAR para confirmar.', 'error'); return; }
+  if (!(await verificarCredenciales(a.usuario, document.getElementById('bpPass').value))) { toast('Contraseña incorrecta.', 'error'); return; }
+  const resumen = (document.getElementById('bpPrev') || {}).textContent || '';
+  confirmar('¿Borrar la selección?', resumen + ' Si te equivocas, restaura el respaldo que acabas de hacer.', 'Sí, borrar', () => borrarSeleccion(r), true);
+};
+function borrarSeleccion(r) {
+  r.ses.forEach(id => eliminarSesion(id));
+  r.asis.forEach(id => dbDel('asis', id)); r.asisdia.forEach(id => dbDel('asisdia', id)); r.cit.forEach(id => dbDel('cit', id));
+  r.ajuste.forEach(id => dbDel('ajuste', id)); r.concl.forEach(id => dbDel('concl', id)); r.tema.forEach(id => dbDel('tema', id));
+  programarSync(500); toast('Listo: se borró lo elegido. Si te equivocaste, restaura el respaldo que descargaste.'); render();
+}
+ACC.reiniciar = async () => {
+  if (!respaldoVigente()) { toast('Primero haz el respaldo (paso 1).', 'error'); return; }
+  const a = dbGet('cfg', 'auth');
   if (!(await verificarCredenciales(a.usuario, document.getElementById('rpass').value))) { toast('Contraseña incorrecta.', 'error'); return; }
-  const conservar = ['cfg', 'bim'].concat(document.getElementById('rkeep').checked ? ['aula', 'est', 'tema', 'crit'] : []);
-  exportarRespaldo();
+  const mantiene = document.getElementById('rkeep').checked;
+  confirmar('¿Borrado y reinicio completo?', 'Se borrará toda la asistencia, fichas, rúbricas, notas, conducta y citaciones' + (mantiene ? '. Se conservan secciones, estudiantes, temario y materiales.' : ', y también secciones, estudiantes y temario.') + ' Si te equivocas, restaura el respaldo que acabas de hacer.', 'Sí, reiniciar', () => reinicioCompleto(mantiene), true);
+};
+async function reinicioCompleto(mantiene) {
+  const conservar = ['cfg', 'bim'].concat(mantiene ? ['aula', 'est', 'tema', 'crit', 'mat'] : []);
   if (syncConfig() && navigator.onLine) {
     await sincronizar();
     const r = await sincronizar({ accion: 'reiniciar', extra: { conservar } });
@@ -2381,8 +2577,8 @@ ACC.reiniciar = async () => {
     await sincronizar();
   } else if (syncConfig()) { toast('Conéctate a internet para reiniciar también la copia de Drive.', 'error'); return; }
   else { await dbBorrarTodo(conservar); DB.meta.colaCorreo = []; guardarMeta(); }
-  toast('Reinicio completo. El respaldo se descargó.'); ir('#/');
-};
+  toast('Reinicio completo.'); ir('#/');
+}
 
 /* =====================================================================
    DATOS DE EJEMPLO (para probar)
@@ -2450,6 +2646,297 @@ ACC.borrarTemas = d => {
     ls.forEach(t => dbDel('tema', t.id)); programarSync(); toast(ls.length + ' temas borrados.'); render();
   }, true);
 };
+
+'use strict';
+/* =====================================================================
+   NÓMINA OFICIAL (estado de cada estudiante), INFORMES DE INASISTENCIA
+   y REGISTRO GENERAL DE ASISTENCIA (solo lectura)
+   ===================================================================== */
+
+const DIAS_CORTO = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+const ESTADOS = { activo: 'Activo', trasladado: 'Trasladado', retirado: 'Retirado', noasiste: 'No asiste' };
+const ESTADO_AYUDA = {
+  trasladado: 'Se fue a otra institución educativa.',
+  retirado: 'Dejó de estudiar o fue retirado por su familia.',
+  noasiste: 'Sigue en la nómina, pero no viene a clases y no se sabe el motivo.'
+};
+function pl(n, uno, varios) { return n + ' ' + (n === 1 ? uno : varios); }
+function estadoEst(e) { return e.estado && e.estado !== 'activo' ? e.estado : (e.retiro ? 'retirado' : 'activo'); }
+
+/* ---------- Cambiar el estado de un estudiante ---------- */
+function cambiarEstado(estId, estado, desde, nota) {
+  const e = dbGet('est', estId); if (!e) return;
+  const idInf = 'est|' + estId;
+  if (estado === 'activo') {
+    dbPut('est', estId, Object.assign({}, e, { estado: 'activo', retiro: '', estadoNota: '' }));
+    const inf = dbGet('inf', idInf); if (inf && !inf.enviada) dbDel('inf', idInf);
+    return;
+  }
+  dbPut('est', estId, Object.assign({}, e, { estado, retiro: desde, estadoNota: nota || '' }));
+  const prev = dbGet('inf', idInf);
+  if (!prev || prev.tipo !== estado || prev.desde !== desde || prev.nota !== (nota || '')) {
+    dbPut('inf', idInf, { tipo: estado, aulaId: e.aulaId, estId, desde, nota: nota || '', creado: hoy(), enviada: false });
+  }
+}
+
+/* ---------- Faltas seguidas (F o J): 2 o más generan informe ---------- */
+function diasDeClase(aulaId) {
+  const s = new Set(dbList('asisdia').filter(a => a.aulaId === aulaId).map(a => a.fecha));
+  dbList('asis').forEach(a => { if (a.aulaId === aulaId) s.add(a.fecha); });
+  return Array.from(s).sort();
+}
+function rachasDeFaltas(aulaId, estId) {
+  const e = dbGet('est', estId) || {};
+  const dias = diasDeClase(aulaId).filter(f => !e.ingreso || f >= e.ingreso);
+  const rachas = []; let cur = null;
+  dias.forEach(f => {
+    const a = dbGet('asis', asisClave(aulaId, f, estId));
+    const falta = a && (a.e === 'F' || a.e === 'J');
+    if (falta) { if (!cur) { cur = { desde: f, fechas: [] }; rachas.push(cur); } cur.fechas.push({ f, e: a.e }); cur.hasta = f; }
+    else cur = null;
+  });
+  return rachas.filter(r => r.fechas.length >= 2);
+}
+function revisarFaltas(aulaId, estId) {
+  const rachas = rachasDeFaltas(aulaId, estId);
+  const vivos = new Set();
+  rachas.forEach(r => {
+    const id = 'falta|' + aulaId + '|' + estId + '|' + r.desde; vivos.add(id);
+    const prev = dbGet('inf', id);
+    if (prev && prev.enviada) return;
+    if (prev && prev.n === r.fechas.length && prev.hasta === r.hasta) return;
+    dbPut('inf', id, { tipo: 'faltas', aulaId, estId, desde: r.desde, hasta: r.hasta, n: r.fechas.length, fechas: r.fechas, creado: (prev && prev.creado) || hoy(), enviada: false });
+  });
+  dbList('inf').forEach(i => { if (i.tipo === 'faltas' && i.aulaId === aulaId && i.estId === estId && !i.enviada && !vivos.has(i.id)) dbDel('inf', i.id); });
+}
+function informes(filtro) { return dbList('inf').filter(filtro || (() => true)).sort((a, b) => (b.hasta || b.desde || '').localeCompare(a.hasta || a.desde || '')); }
+function resumenInforme(i) {
+  if (i.tipo === 'faltas') return i.n + ' faltas seguidas (' + fechaCorta(i.desde) + ' al ' + fechaCorta(i.hasta) + '): ' + i.fechas.map(x => fechaCorta(x.f) + (x.e === 'J' ? ' justificada' : ' injustificada')).join(', ');
+  return ESTADOS[i.tipo] + ' desde el ' + fechaMedia(i.desde) + (i.nota ? ' · ' + i.nota : '');
+}
+
+/* ---------- Word del informe ---------- */
+function informeParrafos(inf, primera) {
+  const c = cfg();
+  const est = dbGet('est', inf.estId) || { ap: '—', no: '' };
+  const bim = bimestreDe(inf.hasta || inf.desde || hoy());
+  const regs = dbList('asis').filter(a => a.aulaId === inf.aulaId && a.estId === inf.estId && bimestreDe(a.fecha) === bim);
+  const dias = diasDeClase(inf.aulaId).filter(f => bimestreDe(f) === bim && (!est.ingreso || f >= est.ingreso) && (inf.tipo === 'faltas' || f < inf.desde));
+  const cuenta = k => regs.filter(a => a.e === k && dias.includes(a.fecha)).length;
+  const P = dias.length - cuenta('T') - cuenta('F') - cuenta('J');
+  const grado = aulaNombre(inf.aulaId).replace('.° ', '.° grado, sección ');
+  const p = [];
+  p.push(wP([wRun(c.colegio || 'I.E. [NOMBRE DEL COLEGIO]', { b: true, sz: 24 })], { lineaAbajo: true, after: 240, salto: !primera }));
+  p.push(wP(wRun('INFORME DE INASISTENCIA', { b: true, sz: 30 }), { jc: 'center', after: 300 }));
+  p.push(wP([wRun('A: ', { b: true }), wRun('Dirección / Coordinación de Tutoría')], { after: 0 }));
+  p.push(wP([wRun('De: ', { b: true }), wRun((c.docente || '[NOMBRE DEL DOCENTE]') + ', docente de ' + (c.area || 'Inglés'))], { after: 0 }));
+  p.push(wP([wRun('Asunto: ', { b: true }), wRun('Inasistencia de ' + est.ap.toUpperCase() + ', ' + est.no + ' · ' + aulaNombre(inf.aulaId))], { after: 0 }));
+  p.push(wP([wRun('Fecha: ', { b: true }), wRun(fechaLarga(hoy()))], { lineaAbajo: true, after: 300 }));
+  if (inf.tipo === 'faltas') {
+    p.push(wP([wRun('Pongo en su conocimiento que el/la estudiante '), wRun(est.ap.toUpperCase() + ', ' + est.no, { b: true }), wRun(', de ' + grado + ', registra '), wRun(inf.n + ' inasistencias seguidas', { b: true }), wRun(' a las clases de ' + (c.area || 'Inglés') + ', del ' + fechaLarga(inf.desde) + ' al ' + fechaLarga(inf.hasta) + ':')], { after: 160 }));
+    inf.fechas.forEach(x => p.push(wP([wRun('• ' + fechaLarga(x.f) + ': '), wRun(x.e === 'J' ? 'falta justificada' : 'falta injustificada', { b: true })], { after: 0 })));
+    p.push(wP('', { after: 160 }));
+  } else {
+    const frase = inf.tipo === 'noasiste' ? 'figura en la nómina oficial, pero no asiste a clases desde el ' : inf.tipo === 'trasladado' ? 'ha sido trasladado a otra institución educativa desde el ' : 'se encuentra retirado desde el ';
+    p.push(wP([wRun('Pongo en su conocimiento que el/la estudiante '), wRun(est.ap.toUpperCase() + ', ' + est.no, { b: true }), wRun(', de ' + grado + ', ' + frase), wRun(fechaLarga(inf.desde), { b: true }), wRun('.')], { after: 160 }));
+    p.push(wP([wRun('Situación: ', { b: true }), wRun(ESTADOS[inf.tipo])], { borde: true, after: 0 }));
+    p.push(wP([wRun('Observación: ', { b: true }), wRun(inf.nota || (inf.tipo === 'noasiste' ? 'No se conoce el motivo.' : 'Sin observaciones.'))], { borde: true, after: 200 }));
+  }
+  p.push(wP([wRun('Asistencia en el ' + romano(bim) + ' bimestre: ', { b: true }), wRun(pl(dias.length, 'clase', 'clases') + ' · ' + pl(Math.max(P, 0), 'asistencia', 'asistencias') + ', ' + pl(cuenta('T'), 'tardanza', 'tardanzas') + ', ' + pl(cuenta('F'), 'falta injustificada', 'faltas injustificadas') + ' y ' + pl(cuenta('J'), 'justificada', 'justificadas') + '.')], { borde: true, after: 300 }));
+  p.push(wP(wRun('Lo que informo para las acciones que correspondan (comunicación con la familia, tutoría o actualización de la nómina).'), { after: 200 }));
+  p.push(wP(wRun('Atentamente,'), { after: 1200 }));
+  p.push(wP(wRun('______________________________'), { after: 0 }));
+  p.push(wP(wRun(c.docente || '[NOMBRE DEL DOCENTE]'), { after: 0 }));
+  p.push(wP(wRun('Docente de ' + (c.area || 'Inglés')), { after: 0 }));
+  return p.join('');
+}
+async function docxDeInformes(lista) { return docxDeCuerpo(lista.map((x, i) => informeParrafos(x, i === 0)).join('')); }
+function nombreInforme(inf) {
+  const e = dbGet('est', inf.estId) || { ap: 'estudiante', no: '' };
+  return 'Informe-inasistencia-' + aulaCodigo(inf.aulaId) + '-' + nombreArchivo(e.ap + ' ' + e.no) + '-' + (inf.hasta || inf.desde) + '.docx';
+}
+async function encolarInformes(aulaId) {
+  const lista = informes(i => (!aulaId || i.aulaId === aulaId) && !i.enviada);
+  if (!lista.length) return 0;
+  const yaEnCola = new Set((DB.meta.colaCorreo || []).flatMap(m => m.id.split(',')));
+  const nuevas = lista.filter(i => !yaEnCola.has(i.id));
+  if (!nuevas.length) return lista.length;
+  const adjuntos = [];
+  for (const i of nuevas) { const b = await docxDeInformes([i]); if (b) adjuntos.push({ nombre: nombreInforme(i), b64: await blobABase64(b) }); }
+  if (!adjuntos.length) return 0;
+  DB.meta.colaCorreo = (DB.meta.colaCorreo || []).concat([{
+    id: nuevas.map(i => i.id).join(','),
+    asunto: 'Informes de inasistencia' + (aulaId ? ' ' + aulaNombre(aulaId) : '') + ' (' + nuevas.length + ')',
+    texto: 'Informes de inasistencia generados por el Registro Auxiliar.\n\n' + nuevas.map((i, k) => (k + 1) + '. ' + nombreEst(dbGet('est', i.estId) || { ap: '—', no: '' }) + ' · ' + aulaNombre(i.aulaId) + ' · ' + resumenInforme(i)).join('\n') + '\n\nRegistro Auxiliar',
+    adjuntos
+  }]);
+  guardarMeta(); avisarCambio();
+  return nuevas.length;
+}
+function avisoEnvio(n, que) {
+  if (!cfg().correo) toast(n + ' ' + que + ' listos. Escribe tu correo en Ajustes › Datos para la citación para recibirlos.', 'error');
+  else if (!syncConfig()) toast(n + ' ' + que + ' listos. Configura el respaldo en Drive para que lleguen a tu correo; mientras, puedes descargarlos.', 'error');
+  else if (!navigator.onLine) toast(n + ' ' + que + ' listos: se enviarán a tu correo apenas haya internet.');
+  else { toast('Enviando ' + n + ' ' + que + ' a tu correo…'); sincronizar().then(r => { toast(r.ok ? 'Enviados a ' + cfg().correo + '.' : 'No se pudo enviar ahora; se reintentará solo.', r.ok ? '' : 'error'); render({ mantener: true }); }); }
+}
+
+/* ---------- Ajustes › Nómina oficial ---------- */
+AJ.nomina = q => {
+  const ls = aulas(); const sel = q.aula || (ls[0] && ls[0].id);
+  let html = '<h1 style="font-size:26px">Nómina oficial</h1><p class="muted" style="margin:0;line-height:1.5">Marca la situación de cada estudiante. Los que no están <b>activos</b> dejan de aparecer en asistencia, fichas, rúbricas y reportes desde la fecha que indiques (sus notas anteriores se guardan), y se prepara un <b>informe de inasistencia</b> en Word para tu correo.</p>' +
+    '<div class="tarjeta fila">' + ls.map(a => '<a class="btn' + (a.id === sel ? ' prim' : '') + '" href="#/ajustes/nomina?aula=' + a.id + '">' + esc(aulaNombre(a)) + '</a>').join('') + '</div>';
+  if (!sel) return html + '<div class="aviso">Primero agrega tus secciones.</div>';
+  const ests = estudiantes(sel, { incluirRetirados: true });
+  const cuenta = {}; ests.forEach(e => { const k = estadoEst(e); cuenta[k] = (cuenta[k] || 0) + 1; });
+  html += '<div class="tarjeta col"><div class="fila"><h2 style="font-size:19px;flex:1">' + esc(aulaNombre(sel)) + ' · ' + ests.length + ' en la nómina</h2><span class="muted">' + Object.keys(ESTADOS).filter(k => cuenta[k]).map(k => cuenta[k] + ' ' + ESTADOS[k].toLowerCase()).join(' · ') + '</span></div><div class="lista">' +
+    (ests.length ? ests.map((e, i) => { const st = estadoEst(e);
+      return '<div class="item nom-item' + (st !== 'activo' ? ' inactivo' : '') + '"><span class="muted" style="width:26px">' + (i + 1) + '</span><span class="tx"><b style="font-size:15px">' + esc(nombreEst(e)) + '</b><span>' + (st === 'activo' ? 'Activo' : ESTADOS[st] + ' desde el ' + esc(fechaMedia(e.retiro)) + (e.estadoNota ? ' · ' + esc(e.estadoNota) : '')) + '</span></span>' +
+        '<span class="seg mini nom-seg" role="group" aria-label="Situación">' + Object.keys(ESTADOS).map(k => '<button class="' + (st === k ? 'on-est-' + k : '') + '" data-act="elegirEstado" data-id="' + e.id + '" data-v="' + k + '" aria-pressed="' + (st === k) + '">' + ESTADOS[k] + '</button>').join('') + '</span></div>'; }).join('')
+      : '<span class="muted">No hay estudiantes en esta sección. Agrégalos en Grados y secciones.</span>') + '</div></div>' +
+    '<a class="btn" style="align-self:flex-start" href="#/informes?aula=' + sel + '">Ver informes de inasistencia de ' + esc(aulaNombre(sel)) + '</a>';
+  return html;
+};
+ACC.elegirEstado = d => {
+  const e = dbGet('est', d.id); if (!e) return; const actual = estadoEst(e);
+  if (d.v === actual) return;
+  UI._estEst = { id: d.id, v: d.v };
+  if (d.v === 'activo') {
+    confirmar('Volver a activo', nombreEst(e) + ' volverá a aparecer en asistencia, fichas, rúbricas y reportes.', 'Sí, activo', () => { cambiarEstado(d.id, 'activo'); programarSync(); toast('Estudiante activo de nuevo.'); render({ mantener: true }); });
+    return;
+  }
+  abrirModal({ titulo: ESTADOS[d.v] + ' · ' + nombreEst(e), cuerpo: '<p class="muted" style="margin:0">' + ESTADO_AYUDA[d.v] + '</p>' +
+    '<div class="campo"><label for="stDesde">¿Desde qué fecha?</label><input id="stDesde" type="date" class="inp" value="' + esc(e.retiro || hoy()) + '"></div>' +
+    '<div class="campo"><label for="stNota">Observación (opcional)</label><input id="stNota" class="inp" value="' + esc(e.estadoNota || '') + '" placeholder="' + (d.v === 'trasladado' ? 'Ej.: a la I.E. N.° …' : d.v === 'noasiste' ? 'Ej.: no se pudo contactar a la familia' : 'Ej.: motivo del retiro') + '"></div>' +
+    '<p class="muted peq" style="margin:0;line-height:1.45">Desde esa fecha deja de aparecer en asistencia, fichas, rúbricas y reportes. Se prepara un informe de inasistencia en Word para tu correo.</p>',
+    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarEstado">Guardar</button>' });
+};
+ACC.guardarEstado = async () => {
+  const x = UI._estEst; const desde = document.getElementById('stDesde').value; const nota = document.getElementById('stNota').value.trim();
+  if (!desde) { toast('Elige la fecha.', 'error'); return; }
+  cambiarEstado(x.id, x.v, desde, nota); cerrarModal(); render({ mantener: true });
+  const e = dbGet('est', x.id); const n = await encolarInformes(e.aulaId);
+  if (n) avisoEnvio(n, 'informe(s)'); else programarSync();
+};
+
+/* ---------- Lista de informes ---------- */
+VISTAS.informes = (p, q) => {
+  const aulaId = q.aula || '';
+  const lista = informes(i => !aulaId || i.aulaId === aulaId);
+  const enCola = new Set((DB.meta.colaCorreo || []).flatMap(m => m.id.split(',')));
+  const item = i => { const e = dbGet('est', i.estId) || { ap: '—', no: '' };
+    return '<div class="item"><span class="ini">' + iniciales(e) + '</span><span class="tx"><b>' + esc(nombreEst(e)) + ' · ' + esc(aulaNombre(i.aulaId)) + '</b><span>' + esc(i.tipo === 'faltas' ? 'Faltas seguidas' : 'Nómina: ' + ESTADOS[i.tipo]) + '</span><span>' + esc(resumenInforme(i)) + '</span></span>' +
+      '<span class="col" style="align-items:flex-end;gap:6px"><span class="etiqueta ' + (i.enviada ? 'verde' : '') + '">' + (i.enviada ? 'Enviado al correo' : enCola.has(i.id) ? 'En cola para el correo' : 'Por enviar') + '</span><span class="fila" style="gap:6px"><button class="btn chico" data-act="bajarInforme" data-id="' + esc(i.id) + '">Descargar Word</button><button class="btn chico peligro" data-act="quitarInforme" data-id="' + esc(i.id) + '">Quitar</button></span></span></div>'; };
+  const pend = lista.filter(i => !i.enviada);
+  return cabecera({ atras: aulaId ? '#/aula/' + aulaId : '#/', titulo: 'Informes de inasistencia' + (aulaId ? ' · ' + aulaNombre(aulaId) : ''), sub: 'Estudiantes no activos en la nómina y con 2 o más faltas seguidas' }) +
+    '<main class="pag">' + (pend.length ? '<div class="fila"><h2 style="font-size:20px;flex:1">Por enviar (' + pend.length + ')</h2><button class="btn prim" data-act="enviarInformes" data-aula="' + aulaId + '">Enviar a mi correo</button></div><div class="lista">' + pend.map(item).join('') + '</div>' : '<div class="aviso verde">No hay informes pendientes.</div>') +
+    (lista.length > pend.length ? '<h2 style="font-size:20px">Enviados</h2><div class="lista">' + lista.filter(i => i.enviada).map(item).join('') + '</div>' : '') + '</main>';
+};
+ACC.bajarInforme = async d => { const i = Object.assign({ id: d.id }, dbGet('inf', d.id)); const b = await docxDeInformes([i]); if (b) descargarBlob(b, nombreInforme(i)); };
+ACC.enviarInformes = async d => { const n = await encolarInformes(d.aula || ''); if (n) avisoEnvio(n, 'informe(s)'); render({ mantener: true }); };
+ACC.quitarInforme = d => confirmar('Quitar informe', 'Se borra este informe de la lista. Si el estudiante vuelve a faltar seguido, se creará uno nuevo.', 'Quitar', () => {
+  dbDel('inf', d.id); DB.meta.colaCorreo = (DB.meta.colaCorreo || []).filter(m => !m.id.split(',').includes(d.id)); guardarMeta(); programarSync(); toast('Informe quitado.'); render({ mantener: true });
+}, true);
+
+/* ---------- Registro general de asistencia (solo lectura) ---------- */
+function regAsistencia(aulaId, bim) {
+  const dias = diasDeClase(aulaId).filter(f => bimestreDe(f) === bim);
+  const ests = estudiantes(aulaId, { incluirRetirados: true });
+  if (!dias.length) return '<div class="aviso">Aún no hay asistencia tomada en el ' + romano(bim) + ' Bimestre.</div>';
+  const sesDe = {}; sesionesAula(aulaId).forEach(s => { (sesDe[s.fecha] = sesDe[s.fecha] || []).push(s); });
+  const NOM = { P: 'Asistió', T: 'Tardanza', F: 'Falta injustificada', J: 'Falta justificada' };
+  let tot = { P: 0, T: 0, F: 0, J: 0 };
+  const cab = '<tr><th class="num">N.°</th><th class="nom">Estudiante</th><th style="min-width:96px">Situación</th>' + dias.map(f => '<th class="dia' + (sesDe[f] ? ' con-ficha' : '') + '" title="' + esc(fechaLarga(f)) + '">' + DIAS_CORTO[parseISO(f).getDay()] + '<br>' + fechaCorta(f) + '</th>').join('') +
+    '<th>P</th><th>T</th><th>F</th><th>J</th><th title="Asistencia (P + T) sobre clases tomadas">%</th></tr>';
+  const filas = ests.map((e, i) => {
+    const st = estadoEst(e); const c = { P: 0, T: 0, F: 0, J: 0 }; let base = 0;
+    const celdas = dias.map(f => {
+      if (e.ingreso && f < e.ingreso) return '<td class="muted" title="Aún no estaba matriculado">·</td>';
+      if (e.retiro && f >= e.retiro) return '<td class="muted" title="' + esc(ESTADOS[st]) + '">—</td>';
+      const a = asistencia(aulaId, f, e.id); c[a.e]++; base++;
+      const cond = a.cond === 'C' ? '<i class="cC" title="Conducta C">C</i>' : '';
+      return '<td><button class="as as-' + a.e + '" data-act="irDia" data-aula="' + aulaId + '" data-f="' + f + '" title="' + esc(fechaLarga(f) + ' · ' + NOM[a.e] + (a.cond === 'C' ? ' · conducta C' : '') + (sesDe[f] ? '' : ' · sin ficha')) + '">' + a.e + cond + '</button></td>';
+    }).join('');
+    Object.keys(tot).forEach(k => tot[k] += c[k]);
+    const pct = base ? Math.round((c.P + c.T) * 100 / base) : 0;
+    return '<tr class="' + (st !== 'activo' ? 'inactivo' : '') + '"><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td><td><span class="etiqueta est-' + st + '">' + ESTADOS[st] + '</span></td>' + celdas +
+      '<td><b>' + c.P + '</b></td><td style="color:var(--tarde)"><b>' + c.T + '</b></td><td style="color:var(--peligro)"><b>' + c.F + '</b></td><td style="color:var(--aviso-t)"><b>' + c.J + '</b></td><td><b style="color:' + (pct < 70 ? 'var(--peligro)' : 'inherit') + '">' + (base ? pct + '%' : '—') + '</b></td></tr>';
+  }).join('');
+  return '<div class="tarjeta col"><div class="fila" style="gap:18px;font-size:15px"><b>' + dias.length + ' clases con asistencia</b><span><b>' + tot.P + '</b> asistencias</span><span style="color:var(--tarde)"><b>' + tot.T + '</b> tardanzas</span><span style="color:var(--peligro)"><b>' + tot.F + '</b> faltas injustificadas</span><span style="color:var(--aviso-t)"><b>' + tot.J + '</b> justificadas</span>' +
+    '<span class="muted">' + ests.filter(e => estadoEst(e) !== 'activo').length + ' no activos</span></div>' +
+    '<p class="muted peq" style="margin:0">Solo para consultar: aquí no se cambia nada. Toca una casilla para abrir la ficha o rúbrica de ese día. Las fechas subrayadas tienen ficha o rúbrica.</p></div>' +
+    '<div class="tabla-caja"><table class="reg asis-reg"><thead>' + cab + '</thead><tbody>' + filas + '</tbody></table></div>';
+}
+ACC.irDia = d => {
+  const ls = sesionesAula(d.aula).filter(s => s.fecha === d.f);
+  if (!ls.length) { toast('El ' + fechaMedia(d.f) + ' no tiene ficha ni rúbrica.'); return; }
+  if (ls.length === 1) { ir('#/ses/' + ls[0].id); return; }
+  abrirModal({ titulo: fechaMedia(d.f), cuerpo: '<div class="col">' + ls.map(s => '<a class="btn" href="#/ses/' + s.id + '" data-act="cerrarModalIr" data-h="#/ses/' + s.id + '">' + (s.tipo === 'cotejo' ? 'Ficha de cotejo' : 'Rúbrica') + ' · clase ' + numeroClase(s) + (s.temaId && dbGet('tema', s.temaId) ? ' · ' + esc(dbGet('tema', s.temaId).nombre) : '') + '</a>').join('') + '</div>',
+    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cerrar</button>' });
+};
+
+'use strict';
+/* =====================================================================
+   MATERIALES: enlaces de Google Drive (programaciones, unidades,
+   sesiones, PPT, fichas…) por grado, por unidad y por tema
+   ===================================================================== */
+
+function materiales(filtro) { return dbList('mat').filter(filtro).sort((a, b) => (a.creado || 0) - (b.creado || 0)); }
+function matsGrado(g) { return materiales(m => m.nivel === 'grado' && String(m.grado) === String(g)); }
+function matsUnidad(g, b, u) { return materiales(m => m.nivel === 'unidad' && String(m.grado) === String(g) && Number(m.bim) === Number(b) && String(m.unidad || '') === String(u || '')); }
+function matsTema(temaId) { return temaId ? materiales(m => m.nivel === 'tema' && m.temaId === temaId) : []; }
+function tipoEnlace(u) {
+  u = String(u || '').toLowerCase();
+  if (u.includes('docs.google.com/presentation')) return ['ppt', 'Presentación'];
+  if (u.includes('docs.google.com/document')) return ['doc', 'Documento'];
+  if (u.includes('docs.google.com/spreadsheets')) return ['xls', 'Hoja de cálculo'];
+  if (u.includes('docs.google.com/forms') || u.includes('forms.gle')) return ['form', 'Formulario'];
+  if (u.includes('youtube.com') || u.includes('youtu.be')) return ['video', 'Video'];
+  if (/\.pdf($|\?)/.test(u)) return ['pdf', 'PDF'];
+  if (/\.pptx?($|\?)/.test(u)) return ['ppt', 'Presentación'];
+  if (/\.docx?($|\?)/.test(u)) return ['doc', 'Documento'];
+  if (u.includes('drive.google.com/drive/folders')) return ['carpeta', 'Carpeta de Drive'];
+  if (u.includes('drive.google.com')) return ['archivo', 'Archivo de Drive'];
+  return ['web', 'Enlace'];
+}
+const ICO_MAT = { ppt: '▶', doc: '≡', xls: '▦', form: '☑', video: '►', pdf: 'PDF', carpeta: '▤', archivo: '◧', web: '↗' };
+function chipMaterial(m, borrable) {
+  const t = tipoEnlace(m.url);
+  return '<span class="mat-chip mat-' + t[0] + '"><a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(t[1] + ' · se abre en otra pestaña') + '"><i aria-hidden="true">' + ICO_MAT[t[0]] + '</i>' + esc(m.titulo || t[1]) + '</a>' +
+    (borrable ? '<button data-act="quitarMaterial" data-id="' + m.id + '" aria-label="Quitar enlace ' + esc(m.titulo || t[1]) + '">×</button>' : '') + '</span>';
+}
+function bloqueMateriales(lista, datos, titulo, vacio) {
+  const attrs = Object.keys(datos).map(k => ' data-' + k + '="' + esc(datos[k]) + '"').join('');
+  return '<div class="mat-bloque">' + (titulo ? '<span class="etq">' + titulo + '</span>' : '') + '<div class="mat-lista">' + lista.map(m => chipMaterial(m, true)).join('') +
+    (!lista.length && vacio ? '<span class="muted peq">' + vacio + '</span>' : '') +
+    '<button class="btn chico punteado" data-act="nuevoMaterial"' + attrs + '>+ Enlace de Drive</button></div></div>';
+}
+ACC.nuevoMaterial = d => {
+  UI._mat = Object.assign({}, d);
+  const para = d.nivel === 'grado' ? 'Documentos de ' + d.grado + '.° grado (programación anual, experiencias, etc.)' : d.nivel === 'unidad' ? (d.unidad ? 'Unidad ' + d.unidad : 'Sin unidad') + ' · ' + d.grado + '.° grado · ' + romano(Number(d.bim)) + ' bimestre' : 'Tema: ' + ((dbGet('tema', d.tema) || {}).nombre || '');
+  abrirModal({ titulo: 'Agregar enlace', cuerpo: '<p class="muted" style="margin:0">' + esc(para) + '</p>' +
+    '<div class="campo"><label for="mUrl">Enlace (cópialo de Drive con «Compartir › Copiar enlace»)</label><input id="mUrl" class="inp" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://docs.google.com/…"></div>' +
+    '<div class="campo"><label for="mTit">Nombre que verás (opcional)</label><input id="mTit" class="inp" placeholder="Ej.: PPT sesión 1 · Sesión de aprendizaje · Ficha de trabajo"></div>' +
+    '<p class="muted peq" style="margin:0;line-height:1.45">El archivo sigue en tu Drive; aquí solo se guarda el enlace. Para abrirlo sin internet, márcalo como «Disponible sin conexión» en la app de Drive.</p>',
+    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarMaterial">Guardar</button>' });
+  setTimeout(() => { const i = document.getElementById('mUrl'); if (i) i.focus(); }, 50);
+};
+ACC.guardarMaterial = () => {
+  const d = UI._mat || {}; const txt = document.getElementById('mUrl').value.trim();
+  const m = txt.match(/https?:\/\/[^\s<>"']+/); if (!m) { toast('Pega un enlace que empiece con https://', 'error'); return; }
+  const rec = { nivel: d.nivel, grado: d.grado || '', bim: d.bim ? Number(d.bim) : '', unidad: d.unidad || '', temaId: d.tema || '', url: m[0], titulo: document.getElementById('mTit').value.trim(), creado: Date.now() };
+  if (d.nivel === 'tema') { const t = dbGet('tema', d.tema); if (t) { rec.grado = t.grado; rec.bim = t.bim; rec.unidad = t.unidad || ''; } }
+  dbPut('mat', uid(), rec); cerrarModal(); programarSync(); toast('Enlace guardado.'); render({ mantener: true });
+  if (d.nivel === 'tema') setTimeout(() => { const det = document.querySelector('.tema-det[data-id="' + d.tema + '"]'); if (det) det.open = true; }, 30);
+};
+ACC.quitarMaterial = d => { const m = dbGet('mat', d.id); if (!m) return;
+  confirmar('Quitar enlace', 'Se quita «' + (m.titulo || tipoEnlace(m.url)[1]) + '» de aquí. El archivo en tu Drive no se borra.', 'Quitar', () => { dbDel('mat', d.id); programarSync(); render({ mantener: true }); }, true); };
+/* En la ficha o rúbrica: los materiales del tema y de su unidad, para abrirlos en clase */
+function materialesDeFicha(s, tema) {
+  if (!tema) return '';
+  const l = matsTema(s.temaId).concat(matsUnidad(tema.grado, tema.bim, tema.unidad || ''));
+  if (!l.length) return '';
+  return '<div class="chips mat-ficha"><span class="fld" style="min-height:0;border:0;background:none;padding:0"><span class="fl">Materiales</span></span>' + l.map(m => chipMaterial(m, false)).join('') + '</div>';
+}
 
 'use strict';
 /* =====================================================================
