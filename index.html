@@ -4,7 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Registro Auxiliar</title>
-<meta name="description" content="Registro auxiliar de Inglés por competencias: asistencia, fichas de cotejo, rúbricas, conducta y notas para SIAGIE.">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive, nosnippet">
+<meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#1e5a50">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icono-192.png">
@@ -400,7 +402,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.5.3';
+const APP_VERSION = '2.5.4';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -1472,19 +1474,24 @@ function vistaIngreso() {
         '<div class="sep">o</div><button type="button" class="btn" data-act="ingModo" data-m="conectar">Ya uso el registro en otro equipo</button>' +
         '<button type="button" class="btn punteado" data-act="cargarDemo">Probar con datos de ejemplo</button></form>';
     }
+  } else if (UI.bloqueada && DB.meta.patron && patronDisponible() && ING.paso !== 'clave2') {
+    form = '<form onsubmit="return false"><h2 style="font-size:30px">Registro bloqueado</h2><p class="muted" style="margin:0;line-height:1.5">Se bloqueó por inactividad. Desbloquéalo con el patrón, la huella o Windows Hello de este equipo.</p>' +
+      '<button type="button" class="patron-btn" data-act="usarPatron">' + ICO.patron + '<span>Desbloquear</span></button>' +
+      (ING.error ? '<div class="aviso rojo">' + esc(ING.error) + '</div>' : '') +
+      '<button type="button" class="btn" data-act="ingConClave">Usar mi contraseña</button></form>';
   } else if (ING.paso === 'patron') {
-    form = '<form onsubmit="return false"><h2 style="font-size:30px">Segundo paso</h2><p class="muted" style="margin:0;line-height:1.5">Confirma con el patrón (o huella) con que desbloqueas esta tableta.</p>' +
-      '<button type="button" class="patron-btn" data-act="usarPatron">' + ICO.patron + '<span>Confirmar con el patrón de bloqueo de la tableta</span></button>' +
+    form = '<form onsubmit="return false"><h2 style="font-size:30px">Segundo paso</h2><p class="muted" style="margin:0;line-height:1.5">Confirma con el patrón, la huella o Windows Hello con que desbloqueas este equipo.</p>' +
+      '<button type="button" class="patron-btn" data-act="usarPatron">' + ICO.patron + '<span>Confirmar con el bloqueo de este equipo</span></button>' +
       (ING.error ? '<div class="aviso rojo">' + esc(ING.error) + '</div>' : '') +
       '<button type="button" class="btn" data-act="ingVolver">Volver</button></form>';
   } else {
-    form = '<form data-envio="ingresar"><h2 style="font-size:30px">Ingresar</h2>' +
+    form = '<form data-envio="ingresar"><h2 style="font-size:30px">' + (UI.bloqueada ? 'Registro bloqueado' : 'Ingresar') + '</h2>' + (UI.bloqueada ? '<p class="muted" style="margin:0">Se bloqueó por inactividad. Lo que marcaste quedó guardado.</p>' : '') +
       '<div class="campo"><label for="iu">Usuario</label><input id="iu" class="inp" required autocomplete="username" autocapitalize="none" value="' + esc(DB.meta.ultimoUsuario || '') + '"></div>' +
       '<div class="campo"><label for="ip">Contraseña</label><input id="ip" class="inp" type="password" required autocapitalize="none" autocorrect="off" autocomplete="current-password"' + (DB.meta.ultimoUsuario ? ' autofocus' : '') + '></div>' +
       (bloqueo ? '<div class="aviso rojo">Demasiados intentos fallidos. Vuelve a intentar a las ' + new Date(DB.meta.bloqueoHasta).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }) + '.</div>' : '') +
       (ING.error ? '<div class="aviso rojo">' + esc(ING.error) + '</div>' : '') +
       '<button class="btn prim" style="min-height:56px"' + (bloqueo ? ' disabled' : '') + '>Continuar</button>' +
-      (DB.meta.patron ? '<div class="sep">luego, segundo paso en esta tableta</div><div class="patron-btn" aria-hidden="true" style="opacity:.7">' + ICO.patron + '<span>Patrón de bloqueo de la tableta</span></div>' : '') +
+      (DB.meta.patron ? '<div class="sep">luego, segundo paso en este equipo</div><div class="patron-btn" aria-hidden="true" style="opacity:.7">' + ICO.patron + '<span>Patrón, huella o Windows Hello</span></div>' : '') +
       '<p class="muted peq" style="margin:0">Tras 10 intentos fallidos el ingreso se bloquea por 1 hora.</p>' +
       (syncConfig() ? '<button type="button" class="btn chico" style="align-self:flex-start" data-act="olvide">Olvidé mi contraseña</button>' : '') + '</form>';
   }
@@ -1492,6 +1499,7 @@ function vistaIngreso() {
 }
 ACC.ingModo = d => { ING.modo = d.m || null; ING.error = ''; render(); };
 ACC.ingVolver = () => { ING.paso = 'clave'; ING.error = ''; render(); };
+ACC.ingConClave = () => { ING.paso = 'clave2'; ING.error = ''; render(); };
 ACC.crearCuenta = async () => {
   const u = document.getElementById('nu').value.trim(), p = document.getElementById('np').value, p2 = document.getElementById('np2').value;
   if (p !== p2) { ING.error = 'Las contraseñas no coinciden.'; render(); return; }
@@ -1528,6 +1536,7 @@ ACC.ingresar = async () => {
   }
   DB.meta.fallos = 0; DB.meta.ultimoUsuario = u.trim(); guardarMeta(); ING.error = '';
   if (DB.meta.patron && patronDisponible()) { ING.paso = 'patron'; render(); ACC.usarPatron(); return; }
+  UI.bloqueada = false;
   abrirSesion();
 };
 ACC.usarPatron = async () => {
@@ -1538,7 +1547,21 @@ ACC.usarPatron = async () => {
   } catch (e) { ING.error = 'No se confirmó el patrón. Toca el botón para intentar de nuevo.'; }
   render();
 };
-function abrirSesion() { UI.sesionAbierta = true; ING.paso = 'clave'; ING.error = ''; render(); programarSync(500); }
+function abrirSesion() { UI.sesionAbierta = true; UI.bloqueada = false; UI.ultimaActividad = Date.now(); ING.paso = 'clave'; ING.error = ''; render(); programarSync(500); }
+/* ---------- Bloqueo automático por inactividad (en cada equipo) ---------- */
+function segundosBloqueo() { const v = Number(DB.meta.bloqueoSeg); return v >= 30 ? v : 30; }
+function bloquearPorInactividad() {
+  if (!UI.sesionAbierta) return;
+  try { cerrarModal(); } catch (e) { }
+  idbVaciar(); UI.sesionAbierta = false; UI.bloqueada = true; ING.paso = 'clave'; ING.error = '';
+  render();
+  if (DB.meta.patron && patronDisponible()) setTimeout(() => { if (UI.bloqueada && !UI.sesionAbierta) ACC.usarPatron(); }, 300);
+}
+['pointerdown', 'keydown', 'input', 'wheel', 'touchstart', 'scroll'].forEach(ev => document.addEventListener(ev, () => { UI.ultimaActividad = Date.now(); }, { capture: true, passive: true }));
+setInterval(() => {
+  if (!UI.sesionAbierta || document.hidden) return;
+  if (Date.now() - (UI.ultimaActividad || Date.now()) > segundosBloqueo() * 1000) bloquearPorInactividad();
+}, 2000);
 ACC.salir = () => { UI.sesionAbierta = false; location.hash = '#/'; render(); };
 
 ACC.olvide = () => {
@@ -2248,7 +2271,7 @@ ACC.excelProgreso = d => exportarProgresoExcel(d.aula);
 /* =====================================================================
    INTERFAZ: AJUSTES
    ===================================================================== */
-const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['nomina', 'Nómina oficial'], ['temario', 'Temario'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Patrón de la tableta'], ['apariencia', 'Apariencia'], ['reinicio', 'Borrar y reiniciar (con respaldo)']];
+const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['nomina', 'Nómina oficial'], ['temario', 'Temario'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Seguridad: bloqueo y segundo paso'], ['apariencia', 'Apariencia'], ['reinicio', 'Borrar y reiniciar (con respaldo)']];
 VISTAS.ajustes = (p, q) => {
   const sec = p[1] || 'secciones';
   const menu = '<nav class="col" style="gap:6px;flex:1 1 240px;max-width:320px">' + SEC_AJ.map(s => '<a href="#/ajustes/' + s[0] + '" class="item" style="min-height:52px;text-decoration:none;font-weight:700;' + (s[0] === sec ? 'background:var(--acento);color:#fff' : 'color:' + (s[0] === 'reinicio' ? 'var(--peligro)' : 'inherit')) + '">' + s[1] + '</a>').join('') + '<div class="muted peq" style="padding:8px">Versión ' + APP_VERSION + '</div></nav>';
@@ -2264,7 +2287,7 @@ AJ.inicio = () => {
     [!bimestres().some(b => b.sugerido), 'Confirma las fechas de los bimestres', 'bimestres'],
     [!!(c.colegio && c.docente && c.correo), 'Escribe el colegio, tu nombre y tu correo para las citaciones', 'citacion'],
     [!!syncConfig(), 'Conecta el respaldo en tu Google Drive', 'respaldo'],
-    [!!DB.meta.patron, 'Activa el patrón de la tableta como segundo paso (opcional)', 'patron']];
+    [!!DB.meta.patron, 'Activa el segundo paso: patrón, huella o Windows Hello (opcional)', 'patron']];
   return '<h1 style="font-size:26px">Primeros pasos</h1>' + pasos.map((x, i) => '<a class="item" href="#/ajustes/' + x[2] + '" style="text-decoration:none;color:inherit"><span class="ini" style="' + (x[0] ? 'background:var(--acento);color:#fff' : '') + '">' + (x[0] ? ICO.check : i + 1) + '</span><span class="tx"><b>' + x[1] + '</b><span>' + (x[0] ? 'Listo' : 'Pendiente') + '</span></span></a>').join('') + '<a class="btn prim" href="#/" style="align-self:flex-start">Ir al inicio</a>';
 };
 
@@ -2534,9 +2557,15 @@ CAMBIO.restaurar = async (v, d, el) => {
 };
 
 /* ---------- Patrón ---------- */
-AJ.patron = () => '<h1 style="font-size:26px">Patrón de la tableta</h1><div class="tarjeta col" style="line-height:1.5"><p style="margin:0">Después de tu usuario y contraseña, el aplicativo te pedirá el mismo patrón (o huella) con que desbloqueas esta tableta. Se configura en cada equipo por separado y funciona sin internet.</p>' +
-  (!patronDisponible() ? '<div class="aviso">Este navegador no permite usar el bloqueo de pantalla. Ábrelo desde el enlace de GitHub en Chrome.</div>' : DB.meta.patron ? '<div class="aviso verde">Activado en este equipo desde el ' + new Date(DB.meta.patron.fecha).toLocaleDateString('es-PE') + '.</div><button class="btn peligro" style="align-self:flex-start" data-act="quitarPatron">Desactivar en este equipo</button>' : '<button class="patron-btn" data-act="activarPatron">' + ICO.patron + '<span>Activar el patrón de esta tableta</span></button>') + '</div>';
-ACC.activarPatron = async () => { try { await registrarPatron((dbGet('cfg', 'auth') || {}).usuario); toast('Patrón activado.'); } catch (e) { toast('No se activó: ' + (e.message || e), 'error'); } render(); };
+AJ.patron = () => { const seg = segundosBloqueo();
+  return '<h1 style="font-size:26px">Seguridad</h1>' +
+  '<div class="tarjeta col" style="line-height:1.5"><h2 style="font-size:19px">Bloqueo automático por inactividad</h2><p style="margin:0">Si no tocas la pantalla ni el teclado durante este tiempo, el registro se bloquea solo. Lo que marcaste ya quedó guardado.</p><div class="fila">' +
+  [[30, '30 segundos'], [60, '1 minuto'], [120, '2 minutos'], [300, '5 minutos']].map(o => '<button class="btn' + (seg === o[0] ? ' prim' : '') + '" data-act="ponerBloqueo" data-v="' + o[0] + '">' + o[1] + '</button>').join('') + '</div>' +
+  '<p class="muted peq" style="margin:0">Se guarda en cada equipo por separado. Si en clase se bloquea mientras escuchas a tus estudiantes, sube a 1 o 2 minutos.</p></div>' +
+  '<div class="tarjeta col" style="line-height:1.5"><h2 style="font-size:19px">Segundo paso al ingresar</h2><p style="margin:0">Después de tu usuario y contraseña, el registro te pide lo mismo con que desbloqueas el equipo: <b>patrón o huella</b> en la tableta, o <b>Windows Hello</b> (PIN, huella o rostro) en la laptop. Funciona sin internet y se activa en cada equipo por separado.</p>' +
+  (!patronDisponible() ? '<div class="aviso">Este navegador no permite usar el bloqueo del equipo. Ábrelo desde el enlace de GitHub en Chrome o Edge.</div>' : DB.meta.patron ? '<div class="aviso verde">Activado en este equipo desde el ' + new Date(DB.meta.patron.fecha).toLocaleDateString('es-PE') + '. Cuando el registro se bloquee por inactividad, lo desbloqueas solo con esto.</div><button class="btn peligro" style="align-self:flex-start" data-act="quitarPatron">Desactivar en este equipo</button>' : '<button class="patron-btn" data-act="activarPatron">' + ICO.patron + '<span>Activar el segundo paso en este equipo</span></button><p class="muted peq" style="margin:0">En la laptop primero configura Windows Hello: Configuración › Cuentas › Opciones de inicio de sesión › PIN (Windows Hello).</p>') + '</div>'; };
+ACC.ponerBloqueo = d => { DB.meta.bloqueoSeg = Number(d.v); guardarMeta(); toast('Bloqueo automático: ' + (Number(d.v) < 60 ? d.v + ' segundos' : (Number(d.v) / 60) + ' minuto(s)') + '.'); render(); };
+ACC.activarPatron = async () => { try { await registrarPatron((dbGet('cfg', 'auth') || {}).usuario); toast('Segundo paso activado en este equipo.'); } catch (e) { toast('No se activó: ' + (e.message || e), 'error'); } render(); };
 ACC.quitarPatron = () => { DB.meta.patron = null; guardarMeta(); render(); };
 
 /* ---------- Apariencia ---------- */
@@ -3099,7 +3128,8 @@ async function arrancar() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { UI.oculto = Date.now(); idbVaciar(); }
     else {
-      if (UI.sesionAbierta && UI.oculto && Date.now() - UI.oculto > 15 * 60000) { UI.sesionAbierta = false; render(); }
+      // al volver a la app después de más tiempo que el de bloqueo, queda bloqueada
+      if (UI.sesionAbierta && UI.oculto && Date.now() - UI.oculto > segundosBloqueo() * 1000) bloquearPorInactividad();
       UI.oculto = null;
       if (UI.sesionAbierta) traerCambios();
     }
