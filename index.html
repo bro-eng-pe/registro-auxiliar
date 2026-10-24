@@ -359,6 +359,20 @@ html:not(.modo-tarjetas) .ficha-lista .frow > .fn b { max-width: 236px; }
 .lv-multi small { font-size: 10px; font-weight: 700; color: var(--suave); }
 .lv-multi .lv { min-width: 30px; height: 22px; font-size: 12px; }
 
+table.asis-reg th.dia b.ncl { color: var(--acento); font-size: 11px; }
+table.asis-reg th.dia.sin-asis { background: var(--aviso); }
+table.asis-reg th.dia b.sin { color: var(--peligro); font-size: 10px; }
+
+/* Asistencia: N.° y Estudiante quedan fijos al desplazarse a la derecha */
+@media (min-width: 641px) {
+  .asis-caja { overflow-x: auto; overflow-y: hidden; }
+  .asis-filas { width: max-content; min-width: 100%; }
+  .asis-filas .asis-row { grid-template-columns: 34px minmax(250px, 1fr) auto auto; }
+  .asis-row > .num, .asis-row > .fn { position: sticky; z-index: 2; background: inherit; align-self: stretch; display: flex; flex-direction: column; justify-content: center; }
+  .asis-row > .num { left: 0; margin-left: -16px; padding-left: 16px; }
+  .asis-row > .fn { left: 50px; margin-left: -12px; padding-left: 12px; padding-right: 8px; box-shadow: 6px 0 6px -6px rgba(0,0,0,.25); }
+}
+
 </style>
 </head>
 <body>
@@ -386,7 +400,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.5.0';
+const APP_VERSION = '2.5.2';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -705,9 +719,16 @@ function agregarCriterioBanco(capId, texto, grado) {
 const MAX_BOTONES = 25;
 function maxBotones(bim) { const b = dbGet('bim', String(bim)); return Math.max(1, Number(b && b.botones) || MAX_BOTONES); }
 function sesiones(filtro) { return dbList('ses').filter(filtro || (() => true)).sort((a, b) => a.fecha.localeCompare(b.fecha) || (a.n - b.n) || a.tipo.localeCompare(b.tipo)); }
-function sesionesAula(aulaId, bim, tipo) { return sesiones(s => s.aulaId === aulaId && (!bim || s.bim === bim) && (!tipo || s.tipo === tipo)); }
+/* El bimestre de una ficha sale siempre de su fecha (si cambias las fechas de los bimestres, las fichas se reubican solas) */
+function bimSes(s) { return bimestreDe(s.fecha); }
+/* Corrige el bimestre guardado en cada ficha según su fecha; devuelve cuántas cambió */
+function alinearBimestresFichas() {
+  let n = 0; dbList('ses').forEach(s => { const b = bimestreDe(s.fecha); if (Number(s.bim) !== b) { const r = Object.assign({}, dbGet('ses', s.id), { bim: b }); dbPut('ses', s.id, r); n++; } });
+  if (n) programarSync(); return n;
+}
+function sesionesAula(aulaId, bim, tipo) { return sesiones(s => s.aulaId === aulaId && (!bim || bimSes(s) === bim) && (!tipo || s.tipo === tipo)); }
 function numeroClase(s) {
-  const fechas = Array.from(new Set(sesionesAula(s.aulaId, s.bim).map(x => x.fecha))).sort();
+  const fechas = Array.from(new Set(sesionesAula(s.aulaId, bimSes(s)).map(x => x.fecha))).sort();
   const i = fechas.indexOf(s.fecha) + 1;
   return String(i) + (s.n === 2 ? '-2' : '');
 }
@@ -1217,14 +1238,19 @@ function exportarRegistroExcel(aulaId, bim) {
   const est = estadisticaCriterios(cons).sort((a, b) => b.bajo - a.bajo);
   const fe = [['Competencia', 'Capacidad', 'Criterio', 'AD', 'A', 'B', 'C', 'Total', '% en B o C']].concat(est.map(o => [COMP[o.comp].corto, CAP[o.cap].nombre, o.texto, o.AD, o.A, o.B, o.C, o.total, Math.round(o.bajo * 100) + '%']));
   hojas.push({ nombre: 'Estadística criterios', filas: fe, anchos: [22, 40, 50, 6, 6, 6, 6, 8, 12], fijas: 3 });
-  const fa = [['N.°', 'Apellidos y nombres', 'Presente', 'Tardanza', 'Falta', 'Justificada', 'Conducta A', 'Conducta B', 'Conducta C']];
+  const fa = [['N.°', 'Apellidos y nombres', 'Clases', 'Presente', 'Tardanza', 'Falta', 'Justificada', '% asistencia', 'Conducta A', 'Conducta B', 'Conducta C']];
   cons.ests.forEach((e, i) => {
-    const l = registrosAsistencia(a => a.aulaId === aulaId && a.estId === e.id && bimestreDe(a.fecha) === bim);
-    const fechas = Array.from(new Set(dbList('asisdia').filter(d => d.aulaId === aulaId && bimestreDe(d.fecha) === bim).map(d => d.fecha)));
-    const F = l.filter(a => a.e === 'F').length, J = l.filter(a => a.e === 'J').length, T = l.filter(a => a.e === 'T').length;
-    fa.push([i + 1, nombreEst(e), fechas.length - F - J - T, T, F, J, l.filter(a => a.cond === 'A').length, l.filter(a => a.cond === 'B').length, l.filter(a => a.cond === 'C').length]);
+    const d = datosAsistencia(aulaId, e.id, bim);
+    fa.push([i + 1, nombreEst(e), d.total, d.P, d.T, d.F, d.J, d.pct + '%', d.regs.filter(a => a.cond === 'A').length, d.regs.filter(a => a.cond === 'B').length, d.regs.filter(a => a.cond === 'C').length]);
   });
-  hojas.push({ nombre: 'Asistencia y conducta', filas: fa, anchos: [5, 34, 10, 10, 8, 11, 11, 11, 11] });
+  hojas.push({ nombre: 'Asistencia y conducta', filas: fa, anchos: [5, 34, 8, 10, 10, 8, 11, 12, 11, 11, 11] });
+  // Asistencia día por día, con el número de clase y las fichas o rúbricas de cada fecha (igual que el Registro de asistencia)
+  const dias = diasDeClase(aulaId).filter(f => bimestreDe(f) === bim);
+  const fd = [['N.°', 'Apellidos y nombres', 'Situación'].concat(dias.map(f => fechaCorta(f) + (claseDeFecha(aulaId, f) ? ' · Clase ' + claseDeFecha(aulaId, f) : '') + (fichasDeFecha(aulaId, f) ? ' (' + fichasDeFecha(aulaId, f) + ')' : ' (sin ficha)')))];
+  estudiantes(aulaId, { incluirRetirados: true }).forEach((e, i) => {
+    fd.push([i + 1, nombreEst(e), ESTADOS[estadoEst(e)]].concat(dias.map(f => (e.ingreso && f < e.ingreso) ? '' : (e.retiro && f >= e.retiro) ? '—' : (a => a.e + (a.cond === 'C' ? ' · cond. C' : ''))(asistencia(aulaId, f, e.id)))));
+  });
+  hojas.push({ nombre: 'Asistencia por fecha', filas: fd, anchos: [5, 34, 12].concat(dias.map(() => 16)), fijas: 3 });
   return XL.descargar(hojas, 'Registro-' + aulaCodigo(aulaId) + '-Bimestre-' + romano(bim) + '-' + hoy() + '.xlsx');
 }
 function filasSiagie(aulaId, bim) {
@@ -1360,10 +1386,11 @@ function render(opts) {
     const v = VISTAS[partes[0] || 'inicio'] || VISTAS.inicio;
     try { html = v(partes, params); } catch (e) { console.error(e); html = cabecera({ atras: '#/' }) + '<main class="pag"><div class="aviso rojo">Ocurrió un error al mostrar esta pantalla: ' + esc(e.message) + '</div></main>'; }
   }
-  if (nueva && !opts.mantener) UI.fichaX = 0;
+  if (nueva && !opts.mantener) { UI.fichaX = 0; UI.asisX = 0; }
   app.innerHTML = html;
   const fc = app.querySelector('.ficha-cuerpo');
   if (fc && UI.fichaX) { fc.scrollLeft = UI.fichaX; const cab = app.querySelector('.ficha-cab'); if (cab) cab.scrollLeft = fc.scrollLeft; }
+  const ac = app.querySelector('.asis-caja'); if (ac && UI.asisX) ac.scrollLeft = UI.asisX;
   if (nueva && !opts.mantener) {
     window.scrollTo(0, 0);
     const f = app.querySelector('[data-foco]');
@@ -1375,7 +1402,8 @@ function ir(h) { if (location.hash === h) render(); else location.hash = h; }
 
 /* Ficha y rúbrica: la cabecera de columnas se desplaza junto con las filas */
 document.addEventListener('scroll', e => {
-  const t = e.target; if (!t.classList || !t.classList.contains('ficha-cuerpo')) return;
+  const t = e.target; if (t.classList && t.classList.contains('asis-caja')) { UI.asisX = t.scrollLeft; return; }
+  if (!t.classList || !t.classList.contains('ficha-cuerpo')) return;
   UI.fichaX = t.scrollLeft; const cab = t.parentNode.querySelector('.ficha-cab'); if (cab) cab.scrollLeft = t.scrollLeft;
 }, true);
 /* ---------- Delegación de eventos ---------- */
@@ -1596,7 +1624,7 @@ function vistaAsistencia(aulaId) {
     '<span class="muted">Conducta C: baja el logro del día y genera citación</span><span style="flex:1"></span>' +
     '<button class="btn chico" data-act="todosPresentes" data-aula="' + aulaId + '" data-f="' + f + '">Todos presentes</button></div></div>' +
     '<main style="max-width:1400px;margin:0 auto;padding:16px 0 80px">' + (f !== hoy() ? '<div class="aviso" style="margin:0 16px 12px">Estás viendo el ' + esc(fechaLarga(f)) + '.</div>' : '') +
-    '<div style="background:var(--sup);border-radius:16px;overflow:hidden;margin:0 12px">' + (filas || '<div class="aviso" style="margin:16px">No hay estudiantes en esta sección. Agrégalos en Ajustes.</div>') + '</div>' +
+    '<div class="asis-caja" style="background:var(--sup);border-radius:16px;margin:0 12px">' + (filas ? '<div class="asis-filas">' + filas + '</div>' : '<div class="aviso" style="margin:16px">No hay estudiantes en esta sección. Agrégalos en Ajustes.</div>') + '</div>' +
     '<div class="fila" style="padding:16px"><a class="btn prim" href="#/aula/' + aulaId + '">Listo</a></div></main>';
 }
 CAMBIO.fechaAsis = (v, d) => { if (v) ir('#/aula/' + d.aula + '/asistencia?f=' + v); };
@@ -1753,7 +1781,7 @@ VISTAS.ses = (p) => {
       '<div class="pag"><div class="leyenda">' + (esCot ? '<span>Sí = A · No = C</span>' : '<span>AD=4 · A=3 · B=2 · C=1, se promedia</span>') + '<span>Participó bastante: desde ' + c.bastante + ' participaciones</span><span>Falta = C</span></div></div>';
   }
   const cerrar = '<button class="btn-claro" data-act="cerrarClase" data-aula="' + s.aulaId + '" data-f="' + s.fecha + '" data-ses="' + s.id + '">Cerrar clase</button>';
-  return cabecera({ atras: '#/aula/' + s.aulaId + '/fichas/' + s.tipo + '?bim=' + s.bim, titulo: aulaNombre(s.aulaId) + ' · ' + (esCot ? 'Ficha de cotejo' : 'Rúbrica'), der: cerrar }) + cabF + cuerpo;
+  return cabecera({ atras: '#/aula/' + s.aulaId + '/fichas/' + s.tipo + '?bim=' + bimSes(s), titulo: aulaNombre(s.aulaId) + ' · ' + (esCot ? 'Ficha de cotejo' : 'Rúbrica'), der: cerrar }) + cabF + cuerpo;
 };
 function sesActual(id) { return Object.assign({ id }, dbGet('ses', id)); }
 function guardarSes(s) { const c = Object.assign({}, s); delete c.id; dbPut('ses', s.id, c); programarSync(); }
@@ -1777,7 +1805,7 @@ ACC.elegirTema = d => {
   const grupos = [1, 2, 3, 4].map(b => {
     const ts = lista.filter(t => Number(t.bim) === b); if (!ts.length) return '';
     let uAnt = null;
-    return '<div class="etq muted" style="padding:6px 12px 0">' + romano(b) + ' Bimestre' + (b === s.bim ? ' · actual' : '') + '</div>' + ts.map(t => {
+    return '<div class="etq muted" style="padding:6px 12px 0">' + romano(b) + ' Bimestre' + (b === bimSes(s) ? ' · actual' : '') + '</div>' + ts.map(t => {
       const hecho = usoTema[t.id];
       const cabU = (t.unidad || '') !== uAnt && ts.some(x => x.unidad) ? '<div class="peq" style="padding:8px 12px 2px;font-weight:700;color:var(--acento)">' + esc(etiquetaUnidad(t)) + '</div>' : '';
       uAnt = t.unidad || '';
@@ -1847,12 +1875,12 @@ ACC.vistaCap = d => { UI._crit.vista = d.c; pintarCriterios(); };
 ACC.togCrit = d => { const x = UI._crit; const i = x.sel.indexOf(d.t); if (i >= 0) x.sel.splice(i, 1); else if (x.sel.length < 8) { x.sel.push(d.t); if (!x.capMap[d.t]) x.capMap[d.t] = x.vista; } pintarCriterios(); };
 ACC.nuevoCrit = () => { const v = document.getElementById('ncrit').value.trim(); if (!v) return; const x = UI._crit; const s = sesActual(x.ses); agregarCriterioBanco(x.vista, v, (dbGet('aula', s.aulaId) || {}).grado); if (x.sel.length < 8 && !x.sel.includes(v)) { x.sel.push(v); x.capMap[v] = x.vista; } pintarCriterios(); };
 ACC.guardarCrit = () => { const x = UI._crit; const s = sesActual(x.ses); if (!x.sel.length) { toast('Elige al menos un criterio.'); return; } cambiarCriterios(s, x.sel.slice(), x.sel.map(t => x.capMap[t] || x.vista)); cerrarModal(); render({ mantener: true }); };
-ACC.temaRapido = d => { const s = sesActual(d.ses); const a = dbGet('aula', s.aulaId); abrirFormTema({ grado: a.grado, bim: s.bim }, s.id); };
+ACC.temaRapido = d => { const s = sesActual(d.ses); const a = dbGet('aula', s.aulaId); abrirFormTema({ grado: a.grado, bim: bimSes(s) }, s.id); };
 
 ACC.borrarFicha = d => {
   const s = sesActual(d.ses); const n = notasDeSesion(s.id).filter(x => (x.c || []).some(Boolean) || (x.p || []).length || x.obs).length;
   confirmar('Eliminar la clase ' + numeroClase(s), 'Se borra esta ' + (s.tipo === 'cotejo' ? 'ficha de cotejo' : 'rúbrica') + ' del ' + fechaMedia(s.fecha) + (n ? ' con las calificaciones de ' + n + ' estudiante' + (n > 1 ? 's' : '') : '') + '. El botón de fecha vuelve a quedar libre. La asistencia y la conducta del día no se borran.', 'Eliminar ficha', () => {
-    const aula = s.aulaId, tipo = s.tipo, bim = s.bim;
+    const aula = s.aulaId, tipo = s.tipo, bim = bimSes(s);
     eliminarSesion(s.id);
     const quedan = sesionesAula(aula, bim, tipo).filter(x => x.fecha === s.fecha);
     if (quedan.length === 1 && quedan[0].n === 2) dbPut('ses', quedan[0].id, Object.assign({}, dbGet('ses', quedan[0].id), { n: 1 }));
@@ -1990,13 +2018,13 @@ CAMBIO.filtroEst = (v, d) => {
   document.getElementById('resEst').innerHTML = cons.ests.filter(e => !v || norm(nombreEst(e)).includes(norm(v))).map(e => '<a class="chip" style="text-decoration:none;color:inherit" href="#/aula/' + d.aula + '/registros/estudiante?bim=' + d.bim + '&est=' + e.id + '">' + esc(nombreEst(e)) + '</a>').join('') || '<span class="muted">Sin resultados</span>';
 };
 function datosAsistencia(aulaId, estId, bim) {
-  const fechas = Array.from(new Set(dbList('asisdia').filter(d => d.aulaId === aulaId && (!bim || bimestreDe(d.fecha) === bim)).map(d => d.fecha)
-    .concat(sesiones(s => s.aulaId === aulaId && (!bim || s.bim === bim)).map(s => s.fecha)))).sort();
+  const fechas = diasDeClase(aulaId).filter(f => !bim || bimestreDe(f) === bim);
   const e = Object.assign({ id: estId }, dbGet('est', estId));
   const validas = fechas.filter(f => estMatriculado(e, f));
   const regs = validas.map(f => Object.assign({ fecha: f }, asistencia(aulaId, f, estId)));
   const F = regs.filter(a => a.e === 'F').length, J = regs.filter(a => a.e === 'J').length, T = regs.filter(a => a.e === 'T').length;
-  return { total: validas.length, P: validas.length - F - J - T, T, F, J, regs, pct: validas.length ? Math.round((validas.length - F) * 100 / validas.length) : 100 };
+  // % de asistencia = clases a las que vino (puntual o tarde) sobre clases dictadas; igual que en el Registro de asistencia
+  return { total: validas.length, P: validas.length - F - J - T, T, F, J, regs, pct: validas.length ? Math.round((validas.length - F - J) * 100 / validas.length) : 100 };
 }
 function estadisticasEstudiante(cons, estId) {
   const r = cons.porEst[estId]; const as = datosAsistencia(cons.aulaId, estId, cons.bim);
@@ -2411,7 +2439,7 @@ ACC.borrarTema = () => { const id = UI._tema.id; confirmar('Eliminar tema', 'Las
 
 /* ---------- Bimestres ---------- */
 AJ.bimestres = () => '<h1 style="font-size:26px">Fechas de bimestres</h1><form class="tarjeta col" data-envio="guardarBims">' + bimestres().map(b => '<div class="fila"><b style="width:120px">' + romano(b.n) + ' Bimestre</b><div class="campo"><label for="bi' + b.n + '">Inicio</label><input id="bi' + b.n + '" type="date" class="inp" value="' + b.inicio + '"></div><div class="campo"><label for="bf' + b.n + '">Fin</label><input id="bf' + b.n + '" type="date" class="inp" value="' + b.fin + '"></div><div class="campo"><label for="bb' + b.n + '">Botones de fichas</label><input id="bb' + b.n + '" type="number" min="1" max="120" class="inp" style="width:120px" value="' + b.botones + '"></div></div>').join('') + '<button class="btn prim" style="align-self:flex-start">Guardar</button><p class="muted peq" style="margin:0;line-height:1.5">Cada ficha se guarda en el bimestre de su fecha. «Botones de fichas» es cuántas clases puedes registrar en el bimestre en fichas de cotejo, y otro tanto en rúbricas. Si en un bimestre trabajas 3 unidades de 18 clases, pon 54 o más.</p></form>';
-ACC.guardarBims = () => { [1, 2, 3, 4].forEach(n => dbPut('bim', String(n), { inicio: document.getElementById('bi' + n).value, fin: document.getElementById('bf' + n).value, botones: Math.max(1, Math.min(120, Number(document.getElementById('bb' + n).value) || MAX_BOTONES)) })); programarSync(); toast('Fechas guardadas.'); render(); };
+ACC.guardarBims = () => { [1, 2, 3, 4].forEach(n => dbPut('bim', String(n), { inicio: document.getElementById('bi' + n).value, fin: document.getElementById('bf' + n).value, botones: Math.max(1, Math.min(120, Number(document.getElementById('bb' + n).value) || MAX_BOTONES)) })); const reub = alinearBimestresFichas(); programarSync(); toast('Fechas guardadas.' + (reub ? ' ' + reub + (reub > 1 ? ' fichas se ubicaron' : ' ficha se ubicó') + ' en el bimestre de su fecha.' : '')); render(); };
 
 /* ---------- Citación ---------- */
 AJ.citacion = () => { const c = cfg(); return '<h1 style="font-size:26px">Datos para la citación</h1><form class="tarjeta col" data-envio="guardarCit">' +
@@ -2511,7 +2539,7 @@ function seleccionBorrar() {
   const enAula = a => !aula || a === aula;
   const r = { ses: [], notas: 0, asis: [], asisdia: [], cit: [], ajuste: [], concl: [], tema: [], avisos: [] };
   if (rango && (!d || !h)) { r.avisos.push('Elige las dos fechas.'); return { r, que, ok: false }; }
-  ['cotejo', 'rubrica'].forEach(t => { if (que.includes(t)) sesiones(s => s.tipo === t && enAula(s.aulaId) && (bim ? s.bim === bim : enFecha(s.fecha))).forEach(s => { r.ses.push(s.id); r.notas += notasDeSesion(s.id).length; }); });
+  ['cotejo', 'rubrica'].forEach(t => { if (que.includes(t)) sesiones(s => s.tipo === t && enAula(s.aulaId) && (bim ? bimSes(s) === bim : enFecha(s.fecha))).forEach(s => { r.ses.push(s.id); r.notas += notasDeSesion(s.id).length; }); });
   if (que.includes('asis')) {
     r.asis = dbList('asis').filter(a => enAula(a.aulaId) && enFecha(a.fecha)).map(a => a.id);
     r.asisdia = dbList('asisdia').filter(a => enAula(a.aulaId) && enFecha(a.fecha)).map(a => a.id);
@@ -2680,9 +2708,11 @@ function cambiarEstado(estId, estado, desde, nota) {
 }
 
 /* ---------- Faltas seguidas (F o J): 2 o más generan informe ---------- */
+/* Días de clase de una sección: los días con asistencia tomada y los días con ficha o rúbrica */
 function diasDeClase(aulaId) {
   const s = new Set(dbList('asisdia').filter(a => a.aulaId === aulaId).map(a => a.fecha));
   dbList('asis').forEach(a => { if (a.aulaId === aulaId) s.add(a.fecha); });
+  dbList('ses').forEach(x => { if (x.aulaId === aulaId) s.add(x.fecha); });
   return Array.from(s).sort();
 }
 function rachasDeFaltas(aulaId, estId) {
@@ -2709,6 +2739,9 @@ function revisarFaltas(aulaId, estId) {
   });
   dbList('inf').forEach(i => { if (i.tipo === 'faltas' && i.aulaId === aulaId && i.estId === estId && !i.enviada && !vivos.has(i.id)) dbDel('inf', i.id); });
 }
+/* Número de clase de una fecha (el mismo que muestran las fichas y rúbricas) */
+function claseDeFecha(aulaId, f) { const s = sesionesAula(aulaId, bimestreDe(f)).find(x => x.fecha === f); return s ? numeroClase(s) : null; }
+function fichasDeFecha(aulaId, f) { const l = sesionesAula(aulaId).filter(x => x.fecha === f); const c = l.filter(x => x.tipo === 'cotejo').length, r = l.length - c; return [c ? c + ' cotejo' : '', r ? r + (r > 1 ? ' rúbricas' : ' rúbrica') : ''].filter(Boolean).join(' + '); }
 function informes(filtro) { return dbList('inf').filter(filtro || (() => true)).sort((a, b) => (b.hasta || b.desde || '').localeCompare(a.hasta || a.desde || '')); }
 function resumenInforme(i) {
   if (i.tipo === 'faltas') return i.n + ' faltas seguidas (' + fechaCorta(i.desde) + ' al ' + fechaCorta(i.hasta) + '): ' + i.fechas.map(x => fechaCorta(x.f) + (x.e === 'J' ? ' justificada' : ' injustificada')).join(', ');
@@ -2845,7 +2878,8 @@ function regAsistencia(aulaId, bim) {
   const sesDe = {}; sesionesAula(aulaId).forEach(s => { (sesDe[s.fecha] = sesDe[s.fecha] || []).push(s); });
   const NOM = { P: 'Asistió', T: 'Tardanza', F: 'Falta injustificada', J: 'Falta justificada' };
   let tot = { P: 0, T: 0, F: 0, J: 0 };
-  const cab = '<tr><th class="num">N.°</th><th class="nom">Estudiante</th><th style="min-width:96px">Situación</th>' + dias.map(f => '<th class="dia' + (sesDe[f] ? ' con-ficha' : '') + '" title="' + esc(fechaLarga(f)) + '">' + DIAS_CORTO[parseISO(f).getDay()] + '<br>' + fechaCorta(f) + '</th>').join('') +
+  const cab = '<tr><th class="num">N.°</th><th class="nom">Estudiante</th><th style="min-width:96px">Situación</th>' + dias.map(f => { const cl = claseDeFecha(aulaId, f); const tom = asistenciaTomada(aulaId, f);
+    return '<th class="dia' + (sesDe[f] ? ' con-ficha' : '') + (tom ? '' : ' sin-asis') + '" title="' + esc(fechaLarga(f) + (sesDe[f] ? ' · ' + fichasDeFecha(aulaId, f) : ' · sin ficha ni rúbrica') + (tom ? '' : ' · asistencia NO tomada: todos figuran presentes')) + '">' + DIAS_CORTO[parseISO(f).getDay()] + '<br>' + fechaCorta(f) + (cl ? '<br><b class="ncl">Clase ' + cl + '</b>' : '') + (tom ? '' : '<br><b class="sin">sin asist.</b>') + '</th>'; }).join('') +
     '<th>P</th><th>T</th><th>F</th><th>J</th><th title="Asistencia (P + T) sobre clases tomadas">%</th></tr>';
   const filas = ests.map((e, i) => {
     const st = estadoEst(e); const c = { P: 0, T: 0, F: 0, J: 0 }; let base = 0;
@@ -2861,9 +2895,9 @@ function regAsistencia(aulaId, bim) {
     return '<tr class="' + (st !== 'activo' ? 'inactivo' : '') + '"><td class="num">' + (i + 1) + '</td><td class="nom">' + esc(nombreEst(e)) + '</td><td><span class="etiqueta est-' + st + '">' + ESTADOS[st] + '</span></td>' + celdas +
       '<td><b>' + c.P + '</b></td><td style="color:var(--tarde)"><b>' + c.T + '</b></td><td style="color:var(--peligro)"><b>' + c.F + '</b></td><td style="color:var(--aviso-t)"><b>' + c.J + '</b></td><td><b style="color:' + (pct < 70 ? 'var(--peligro)' : 'inherit') + '">' + (base ? pct + '%' : '—') + '</b></td></tr>';
   }).join('');
-  return '<div class="tarjeta col"><div class="fila" style="gap:18px;font-size:15px"><b>' + dias.length + ' clases con asistencia</b><span><b>' + tot.P + '</b> asistencias</span><span style="color:var(--tarde)"><b>' + tot.T + '</b> tardanzas</span><span style="color:var(--peligro)"><b>' + tot.F + '</b> faltas injustificadas</span><span style="color:var(--aviso-t)"><b>' + tot.J + '</b> justificadas</span>' +
+  return verificacionFechas(aulaId, bim) + '<div class="tarjeta col"><div class="fila" style="gap:18px;font-size:15px"><b>' + dias.length + ' días de clase</b><span><b>' + tot.P + '</b> asistencias</span><span style="color:var(--tarde)"><b>' + tot.T + '</b> tardanzas</span><span style="color:var(--peligro)"><b>' + tot.F + '</b> faltas injustificadas</span><span style="color:var(--aviso-t)"><b>' + tot.J + '</b> justificadas</span>' +
     '<span class="muted">' + ests.filter(e => estadoEst(e) !== 'activo').length + ' no activos</span></div>' +
-    '<p class="muted peq" style="margin:0">Solo para consultar: aquí no se cambia nada. Toca una casilla para abrir la ficha o rúbrica de ese día. Las fechas subrayadas tienen ficha o rúbrica.</p></div>' +
+    '<p class="muted peq" style="margin:0">Solo para consultar: aquí no se cambia nada. Toca una casilla para abrir la ficha o rúbrica de ese día. Cada fecha muestra su número de clase, el mismo de las fichas y rúbricas; las subrayadas tienen ficha o rúbrica.</p></div>' +
     '<div class="tabla-caja"><table class="reg asis-reg"><thead>' + cab + '</thead><tbody>' + filas + '</tbody></table></div>';
 }
 ACC.irDia = d => {
@@ -2873,6 +2907,46 @@ ACC.irDia = d => {
   abrirModal({ titulo: fechaMedia(d.f), cuerpo: '<div class="col">' + ls.map(s => '<a class="btn" href="#/ses/' + s.id + '" data-act="cerrarModalIr" data-h="#/ses/' + s.id + '">' + (s.tipo === 'cotejo' ? 'Ficha de cotejo' : 'Rúbrica') + ' · clase ' + numeroClase(s) + (s.temaId && dbGet('tema', s.temaId) ? ' · ' + esc(dbGet('tema', s.temaId).nombre) : '') + '</a>').join('') + '</div>',
     pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cerrar</button>' });
 };
+
+/* ---------- Verificación: fechas de asistencia, fichas y rúbricas ---------- */
+function problemasFechas(aulaId, bim) {
+  const out = []; const bs = bimestres();
+  const dentro = f => bs.some(b => b.inicio && b.fin && f >= b.inicio && f <= b.fin);
+  const nomTipo = s => s.tipo === 'cotejo' ? 'ficha de cotejo' : 'rúbrica';
+  const ses = sesionesAula(aulaId, bim);
+  ses.forEach(s => {
+    const lugar = 'la ' + nomTipo(s) + ' del ' + fechaMedia(s.fecha) + ' (clase ' + numeroClase(s) + ')';
+    const ir = '#/ses/' + s.id;
+    if (s.bim && Number(s.bim) !== bimSes(s)) out.push({ tipo: 'info', txt: 'La ' + nomTipo(s) + ' del ' + fechaMedia(s.fecha) + ' se había guardado en el ' + romano(Number(s.bim)) + ' bimestre. Por su fecha ahora se cuenta en el ' + romano(bimSes(s)) + '.', ir });
+    if (!dentro(s.fecha)) out.push({ tipo: 'aviso', txt: 'La ' + nomTipo(s) + ' del ' + fechaMedia(s.fecha) + ' está fuera de las fechas de los bimestres. Revisa Ajustes › Fechas de bimestres.', ir: '#/ajustes/bimestres' });
+    if (s.fecha > hoy()) out.push({ tipo: 'aviso', txt: 'La ' + nomTipo(s) + ' tiene una fecha futura (' + fechaMedia(s.fecha) + ').', ir });
+    const dia = parseISO(s.fecha).getDay(); if (dia === 0 || dia === 6) out.push({ tipo: 'info', txt: 'La ' + nomTipo(s) + ' es de un ' + DIAS[dia] + ' (' + fechaMedia(s.fecha) + ').', ir });
+    if (!asistenciaTomada(aulaId, s.fecha)) out.push({ tipo: 'aviso', txt: 'El ' + fechaMedia(s.fecha) + ' hay ' + nomTipo(s) + ' pero no se tomó asistencia: todos figuran presentes.', ir: '#/aula/' + aulaId + '/asistencia?f=' + s.fecha });
+    if (!s.comp || !(s.crit || []).length) out.push({ tipo: 'aviso', txt: 'En ' + lugar + ' faltan la competencia o los criterios: no cuenta para las notas.', ir });
+    notasDeSesion(s.id).forEach(n => {
+      const tiene = (n.c || []).some(Boolean); if (!tiene) return;
+      const e = dbGet('est', n.estId); if (!e || e.aulaId !== aulaId) return;
+      const a = asistencia(aulaId, s.fecha, n.estId);
+      if (a.e === 'F') out.push({ tipo: 'aviso', txt: nombreEst(e) + ' tiene calificaciones en ' + lugar + ', pero ese día figura con falta injustificada: cuenta como C.', ir });
+      else if (a.e === 'J' && !n.rec) out.push({ tipo: 'aviso', txt: nombreEst(e) + ' tiene calificaciones en ' + lugar + ', pero ese día figura con falta justificada y la nota no se ha recuperado: no cuenta.', ir });
+      if (e.ingreso && s.fecha < e.ingreso) out.push({ tipo: 'aviso', txt: nombreEst(e) + ' tiene calificaciones en ' + lugar + ', anterior a su ingreso (' + fechaMedia(e.ingreso) + '): no cuentan.', ir });
+      if (e.retiro && s.fecha >= e.retiro) out.push({ tipo: 'aviso', txt: nombreEst(e) + ' tiene calificaciones en ' + lugar + ', pero desde el ' + fechaMedia(e.retiro) + ' figura como ' + ESTADOS[estadoEst(e)].toLowerCase() + ': no cuentan.', ir });
+    });
+  });
+  // dos fichas del mismo tipo el mismo día con el mismo número
+  const vistos = {}; ses.forEach(s => { const k = s.fecha + '|' + s.tipo + '|' + (s.n || 1); if (vistos[k]) out.push({ tipo: 'aviso', txt: 'Hay dos ' + (s.tipo === 'cotejo' ? 'fichas de cotejo' : 'rúbricas') + ' marcadas como la n.° ' + (s.n || 1) + ' del ' + fechaMedia(s.fecha) + '.', ir: '#/ses/' + s.id }); vistos[k] = 1; });
+  return out;
+}
+function verificacionFechas(aulaId, bim) {
+  const l = problemasFechas(aulaId, bim);
+  const avisos = l.filter(x => x.tipo === 'aviso'), infos = l.filter(x => x.tipo === 'info');
+  const n = sesionesAula(aulaId, bim).length;
+  if (!l.length) return '<div class="aviso verde"><b>Verificación de fechas:</b> todo coincide. Las ' + n + ' fichas y rúbricas del ' + romano(bim) + ' bimestre tienen asistencia tomada en su misma fecha, y ninguna calificación choca con una falta o con la nómina.</div>';
+  const item = x => '<li><a href="' + x.ir + '">' + esc(x.txt) + '</a></li>';
+  return '<details class="tarjeta" ' + (avisos.length ? 'open' : '') + ' style="padding:14px 18px"><summary style="cursor:pointer;font-weight:700">Verificación de fechas: ' + (avisos.length ? avisos.length + ' cosa' + (avisos.length > 1 ? 's' : '') + ' por revisar' : 'todo coincide') + (infos.length ? ' · ' + infos.length + ' nota' + (infos.length > 1 ? 's' : '') : '') + '</summary>' +
+    (avisos.length ? '<ul class="verif" style="margin:10px 0 0;padding-left:20px;line-height:1.5">' + avisos.map(item).join('') + '</ul>' : '') +
+    (infos.length ? '<ul class="verif muted" style="margin:10px 0 0;padding-left:20px;line-height:1.5">' + infos.map(item).join('') + '</ul>' : '') + '</details>';
+}
 
 'use strict';
 /* =====================================================================
@@ -2948,6 +3022,12 @@ async function arrancar() {
   // Reglas acordadas el 17/10/2026: subir a AD pide 12 participaciones (antes 1)
   const g = dbGet('cfg', 'general');
   if (g && Number(g.minAD) === 1 && !g.reglas2) setCfg({ minAD: 12, reglas2: true });
+  // Después de recibir lo último de Drive, cada ficha queda en el bimestre de su fecha
+  setTimeout(async () => {
+    if (syncConfig() && navigator.onLine) await sincronizar();
+    const reub = alinearBimestresFichas();
+    if (reub && UI.sesionAbierta) toast(reub + (reub > 1 ? ' fichas se ubicaron' : ' ficha se ubicó') + ' en el bimestre que corresponde a su fecha.');
+  }, 2500);
   DB.oyentes.push(() => {
     refrescarEstado();
   });
