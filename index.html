@@ -400,7 +400,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.5.2';
+const APP_VERSION = '2.5.3';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -740,6 +740,25 @@ function crearSesion(aulaId, tipo, fecha) {
   const id = uid();
   dbPut('ses', id, { aulaId, tipo, fecha, bim, n: delDia.length + 1, temaId: '', proposito: '', producto: '', comp: '', cap: '', crit: [], creada: Date.now() });
   return id;
+}
+/* Día en que realmente se calificó una ficha (el más frecuente entre sus notas) */
+function fechaCalificada(sesId) {
+  const cuenta = {};
+  DB.recs.forEach((r, k) => { if (k.startsWith('nota:' + sesId + '|') && !r.d && r.v && ((r.v.c || []).some(Boolean) || (r.v.p || []).length)) { const f = fechaISO(new Date(r.t)); cuenta[f] = (cuenta[f] || 0) + 1; } });
+  return Object.keys(cuenta).sort((a, b) => cuenta[b] - cuenta[a] || a.localeCompare(b))[0] || null;
+}
+/* Cambiar la fecha de una ficha (solo cuando el docente lo pide): toma la asistencia de la nueva fecha */
+function moverFicha(sesId, fecha) {
+  const s = dbGet('ses', sesId); if (!s) return 'Ficha no encontrada.';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha || '')) return 'Elige una fecha.';
+  if (fecha > hoy()) return 'No puede ser una fecha futura.';
+  if (fecha === s.fecha) return 'Es la misma fecha.';
+  const mismas = sesiones(x => x.aulaId === s.aulaId && x.tipo === s.tipo && x.fecha === fecha);
+  if (mismas.length >= 2) return 'Ese día ya tiene dos ' + (s.tipo === 'cotejo' ? 'fichas de cotejo' : 'rúbricas') + '.';
+  dbPut('ses', sesId, Object.assign({}, s, { fecha, bim: bimestreDe(fecha), n: mismas.length + 1, movida: { de: s.fecha, el: Date.now() } }));
+  // la que quedó sola en el día anterior vuelve a ser la n.° 1
+  sesiones(x => x.aulaId === s.aulaId && x.tipo === s.tipo && x.fecha === s.fecha && x.id !== sesId).forEach((x, i) => { if ((x.n || 1) !== i + 1) dbPut('ses', x.id, Object.assign({}, dbGet('ses', x.id), { n: i + 1 })); });
+  programarSync(); return null;
 }
 function nota(sesId, estId) { return Object.assign({ c: [], p: [], obs: '', rec: false }, dbGet('nota', sesId + '|' + estId) || {}); }
 function setNota(sesId, estId, cambios) { const n = Object.assign(nota(sesId, estId), cambios, { sesId, estId }); dbPut('nota', sesId + '|' + estId, n); return n; }
@@ -1698,7 +1717,7 @@ function vistaBotonesFecha(aulaId, tipo) {
   const f = hoy(); const bimHoy = bimestreDe(f); const bim = Number(UI.params.bim || bimHoy);
   const usadas = sesionesAula(aulaId, bim, tipo);
   const delDia = usadas.filter(s => s.fecha === f);
-  let btns = usadas.map(s => '<a class="fecha-btn' + (s.fecha === f ? ' usada-hoy' : '') + '" href="#/ses/' + s.id + '" style="text-decoration:none;color:inherit"' + (s.fecha === f ? ' data-foco' : '') + '><b>Clase ' + numeroClase(s) + '</b><span>' + fechaCorta(s.fecha) + ' · ' + esc(s.temaId && dbGet('tema', s.temaId) ? dbGet('tema', s.temaId).nombre : 'Ver / corregir') + '</span></a>');
+  let btns = usadas.map(s => '<a class="fecha-btn' + (s.fecha === f ? ' usada-hoy' : '') + '" href="#/ses/' + s.id + '" style="text-decoration:none;color:inherit"' + (s.fecha === f ? ' data-foco' : '') + '><b>Clase ' + numeroClase(s) + '</b><span>' + fechaCorta(s.fecha) + ' · ' + esc(s.temaId && dbGet('tema', s.temaId) ? dbGet('tema', s.temaId).nombre : (!(s.crit || []).length && !notasDeSesion(s.id).length ? (s.fecha === f ? 'Abrir' : 'Vacía · no es de hoy') : 'Ver / corregir')) + '</span></a>');
   let foco = !delDia.length;
   if (bim === bimHoy) {
     for (let k = delDia.length + 1; k <= 2 && btns.length < maxBotones(bim); k++) {
@@ -1716,8 +1735,12 @@ function vistaBotonesFecha(aulaId, tipo) {
     (usadas.length >= maxBotones(bim) && bim === bimHoy && delDia.length < 2 ? '<div class="aviso">Ya usaste los ' + maxBotones(bim) + ' botones de este bimestre. Puedes aumentarlos en Ajustes › Fechas de bimestres.</div>' : '') +
     '<div class="grid-fechas">' + btns.join('') + '</div></main>';
 }
-ACC.nuevaSesion = d => {
+ACC.nuevaSesion = async d => {
   if (!estudiantes(d.aula).length) { toast('Primero agrega estudiantes a esta sección en Ajustes.', 'error'); return; }
+  // Antes de crear, trae lo hecho en otros equipos: así no se crean dos fichas del mismo día
+  if (syncConfig() && navigator.onLine) await sincronizar();
+  const yaHay = sesionesAula(d.aula, bimestreDe(hoy()), d.tipo).filter(s => s.fecha === hoy());
+  if (yaHay.length === 1 && !(yaHay[0].crit || []).length) { toast('Ya había una ficha de hoy (creada en otro equipo): se abre esa.'); ir('#/ses/' + yaHay[0].id); return; }
   const id = crearSesion(d.aula, d.tipo);
   if (!id) { toast('Ya usaste las dos fichas de hoy.', 'error'); return; }
   programarSync(); ir('#/ses/' + id);
@@ -1732,7 +1755,7 @@ VISTAS.ses = (p) => {
   const fld = (act, etq, val, vacio, req) => '<button class="fld' + (val ? '' : ' vacio') + (req && !val ? ' req' : '') + '" data-act="' + act + '" data-ses="' + s.id + '"><span class="fl">' + etq + ' ▾</span><span class="fv">' + esc(val || vacio) + '</span></button>';
   const cabF = '<section class="cabficha"><div class="g">' +
     '<div class="fld"><span class="fl">Clase</span><span class="fv" style="font-weight:700">' + numeroClase(s) + '</span></div>' +
-    '<div class="fld"><span class="fl">Fecha</span><span class="fv">' + fechaCorta(s.fecha) + '/' + s.fecha.slice(0, 4) + '</span></div>' +
+    '<button class="fld" data-act="cambiarFecha" data-ses="' + s.id + '"><span class="fl">Fecha ▾</span><span class="fv">' + fechaCorta(s.fecha) + '/' + s.fecha.slice(0, 4) + '</span></button>' +
     fld('elegirTema', 'Tema', tema ? tema.nombre : '', 'Elegir tema…', true) +
     fld('editarProducto', 'Producto de la clase', s.producto, 'Se carga con el tema') + '</div><div class="g2">' +
     fld('editarProposito', 'Propósito', s.proposito, 'Se carga con el tema') +
@@ -1781,7 +1804,42 @@ VISTAS.ses = (p) => {
       '<div class="pag"><div class="leyenda">' + (esCot ? '<span>Sí = A · No = C</span>' : '<span>AD=4 · A=3 · B=2 · C=1, se promedia</span>') + '<span>Participó bastante: desde ' + c.bastante + ' participaciones</span><span>Falta = C</span></div></div>';
   }
   const cerrar = '<button class="btn-claro" data-act="cerrarClase" data-aula="' + s.aulaId + '" data-f="' + s.fecha + '" data-ses="' + s.id + '">Cerrar clase</button>';
-  return cabecera({ atras: '#/aula/' + s.aulaId + '/fichas/' + s.tipo + '?bim=' + bimSes(s), titulo: aulaNombre(s.aulaId) + ' · ' + (esCot ? 'Ficha de cotejo' : 'Rúbrica'), der: cerrar }) + cabF + cuerpo;
+  return cabecera({ atras: '#/aula/' + s.aulaId + '/fichas/' + s.tipo + '?bim=' + bimSes(s), titulo: aulaNombre(s.aulaId) + ' · ' + (esCot ? 'Ficha de cotejo' : 'Rúbrica'), der: cerrar }) + cabF + avisoFechaFicha(s) + cuerpo;
+};
+/* Aviso cuando la ficha no es de hoy: evita calificar la clase de hoy en una ficha de otro día */
+function avisoFechaFicha(s) {
+  if (s.fecha === hoy()) return '';
+  const vacia = !(s.crit || []).length && !notasDeSesion(s.id).length;
+  const fc = fechaCalificada(s.id);
+  return '<div class="pag" style="padding-top:12px;padding-bottom:0"><div class="aviso' + (vacia ? ' rojo' : '') + '">Esta ' + (s.tipo === 'cotejo' ? 'ficha' : 'rúbrica') + ' es de la clase del <b>' + esc(fechaLarga(s.fecha)) + '</b>, no de hoy. Usa la asistencia de ese día.' +
+    (vacia ? ' Si vas a calificar la clase de hoy, vuelve y toca <b>«Hoy»</b>.' : '') +
+    (fc && fc !== s.fecha && asistenciaTomada(s.aulaId, fc) && !sesionesAula(s.aulaId).some(x => x.fecha === fc && x.tipo === s.tipo) ? '<br>Parece que se calificó el <b>' + esc(fechaMedia(fc)) + '</b>, un día con asistencia y sin ' + (s.tipo === 'cotejo' ? 'ficha' : 'rúbrica') + '. <button class="btn chico" data-act="cambiarFecha" data-ses="' + s.id + '" data-f="' + fc + '">Pasarla al ' + fechaCorta(fc) + '</button>' : '') + '</div></div>';
+}
+ACC.cambiarFecha = d => {
+  const s = sesActual(d.ses); UI._mover = s.id;
+  abrirModal({ titulo: 'Cambiar la fecha de esta ' + (s.tipo === 'cotejo' ? 'ficha' : 'rúbrica'), cuerpo:
+    '<p style="margin:0;line-height:1.5">Ahora es del <b>' + esc(fechaLarga(s.fecha)) + '</b>. Úsalo solo si calificaste en la ficha de otro día. Las notas y participaciones se conservan; lo que cambia es la <b>asistencia</b> que se usa (quién faltó, tardanzas, justificadas y conducta de la nueva fecha).</p>' +
+    '<div class="campo"><label for="mvF">Nueva fecha</label><input id="mvF" type="date" class="inp" max="' + hoy() + '" value="' + esc(d.f || '') + '" data-cambio="prevMover"></div><div id="mvPrev"></div>',
+    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="confirmarMover">Cambiar fecha</button>' });
+  if (d.f) setTimeout(() => CAMBIO.prevMover(d.f), 20);
+};
+CAMBIO.prevMover = v => {
+  const s = sesActual(UI._mover); const el = document.getElementById('mvPrev'); if (!el || !v) return;
+  const ests = estudiantes(s.aulaId).filter(e => estMatriculado(e, v));
+  const l = ests.map(e => ({ e, a: asistencia(s.aulaId, v, e.id) }));
+  const fal = l.filter(x => x.a.e === 'F'), jus = l.filter(x => x.a.e === 'J'), tar = l.filter(x => x.a.e === 'T'), con = l.filter(x => x.a.cond === 'C');
+  const sinNota = l.filter(x => x.a.e !== 'F' && x.a.e !== 'J' && !(nota(s.id, x.e.id).c || []).some(Boolean));
+  const otras = sesionesAula(s.aulaId).filter(x => x.fecha === v && x.id !== s.id);
+  const nom = arr => arr.map(x => esc(nombreEst(x.e))).join('; ');
+  el.innerHTML = '<div class="aviso' + (asistenciaTomada(s.aulaId, v) ? '' : ' rojo') + '" style="line-height:1.5">' + (asistenciaTomada(s.aulaId, v) ? '<b>Asistencia del ' + esc(fechaMedia(v)) + ':</b>' : '<b>El ' + esc(fechaMedia(v)) + ' no tiene asistencia tomada:</b> todos figurarán presentes.') +
+    (fal.length ? '<br>Faltas (no aparecerán): ' + nom(fal) : '') + (jus.length ? '<br>Justificadas (bloqueadas): ' + nom(jus) : '') + (tar.length ? '<br>Tardanzas: ' + nom(tar) : '') + (con.length ? '<br>Conducta C (su logro baja): ' + nom(con) : '') +
+    (sinNota.length ? '<br><b>Sin calificar ese día:</b> ' + nom(sinNota) : '') +
+    (otras.length ? '<br>Ese día ya tiene: ' + otras.map(x => (x.tipo === 'cotejo' ? 'ficha de cotejo' : 'rúbrica')).join(' y ') + '.' : '') + '</div>';
+};
+ACC.confirmarMover = () => {
+  const v = document.getElementById('mvF').value; const err = moverFicha(UI._mover, v);
+  if (err) { toast(err, 'error'); return; }
+  cerrarModal(); toast('Listo: la ficha ahora es del ' + fechaMedia(v) + '.'); render({ mantener: true });
 };
 function sesActual(id) { return Object.assign({ id }, dbGet('ses', id)); }
 function guardarSes(s) { const c = Object.assign({}, s); delete c.id; dbPut('ses', s.id, c); programarSync(); }
@@ -2923,6 +2981,9 @@ function problemasFechas(aulaId, bim) {
     const dia = parseISO(s.fecha).getDay(); if (dia === 0 || dia === 6) out.push({ tipo: 'info', txt: 'La ' + nomTipo(s) + ' es de un ' + DIAS[dia] + ' (' + fechaMedia(s.fecha) + ').', ir });
     if (!asistenciaTomada(aulaId, s.fecha)) out.push({ tipo: 'aviso', txt: 'El ' + fechaMedia(s.fecha) + ' hay ' + nomTipo(s) + ' pero no se tomó asistencia: todos figuran presentes.', ir: '#/aula/' + aulaId + '/asistencia?f=' + s.fecha });
     if (!s.comp || !(s.crit || []).length) out.push({ tipo: 'aviso', txt: 'En ' + lugar + ' faltan la competencia o los criterios: no cuenta para las notas.', ir });
+    const fc = fechaCalificada(s.id);
+    if (fc && fc !== s.fecha && asistenciaTomada(aulaId, fc) && !sesionesAula(aulaId).some(x => x.fecha === fc && x.tipo === s.tipo))
+      out.push({ tipo: 'aviso', txt: 'La ' + nomTipo(s) + ' con fecha ' + fechaMedia(s.fecha) + ' se calificó el ' + fechaMedia(fc) + ', día que tiene asistencia pero no tiene ' + nomTipo(s) + '. Probablemente es la clase del ' + fechaCorta(fc) + ': ábrela y toca «Pasarla al ' + fechaCorta(fc) + '».', ir });
     notasDeSesion(s.id).forEach(n => {
       const tiene = (n.c || []).some(Boolean); if (!tiene) return;
       const e = dbGet('est', n.estId); if (!e || e.aulaId !== aulaId) return;

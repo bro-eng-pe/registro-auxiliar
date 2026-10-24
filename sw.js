@@ -1,5 +1,5 @@
 /* Registro Auxiliar: funciona sin internet */
-const CACHE = 'registro-auxiliar-v2.5.2';
+const CACHE = 'registro-auxiliar-v2.5.3';
 const BASE = ['./', './index.html', './manifest.json', './icono-192.png', './icono-512.png'];
 const CDN = [];
 self.addEventListener('install', e => {
