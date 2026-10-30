@@ -1,6 +1,6 @@
 /* Registro Auxiliar: funciona sin internet */
-const CACHE = 'registro-auxiliar-v2.6.1';
-const BASE = ['./', './index.html', './manifest.json', './icono-192.png', './icono-512.png'];
+const CACHE = 'registro-auxiliar-v2.7.0';
+const BASE = ['./', './index.html', './manifest.json', './icono-192.png', './icono-512.png', './favicon.png'];
 const CDN = [];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(BASE).then(() => Promise.all(CDN.map(u => fetch(u, { mode: 'cors' }).then(r => r.ok && c.put(u, r)).catch(() => null))))).then(() => self.skipWaiting()));
