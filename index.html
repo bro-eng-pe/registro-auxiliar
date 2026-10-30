@@ -375,6 +375,46 @@ table.asis-reg th.dia b.sin { color: var(--peligro); font-size: 10px; }
   .asis-row > .fn { left: 50px; margin-left: -12px; padding-left: 12px; padding-right: 8px; box-shadow: 6px 0 6px -6px rgba(0,0,0,.25); }
 }
 
+/* ---------- Materiales 2.6 ---------- */
+.mat-zona { border: 2px dashed transparent; border-radius: 12px; transition: background .12s, border-color .12s; }
+.mat-bloque.mat-zona { padding: 6px; margin: -6px; }
+.mat-zona.mat-sobre { border-color: var(--acento); background: var(--acento-sv); }
+.mat-chip .mat-nom { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mat-chip.mini { min-height: 34px; border-radius: 8px; }
+.mat-chip.mini a { padding: 4px 10px; font-size: 13px; max-width: 230px; gap: 6px; }
+.mat-chip.mini i { min-width: 30px; height: 20px; font-size: 10px; }
+.mat-chip i { min-width: 32px; }
+.mat-audio i { background: #0e7490; } .mat-img i { background: #9333ea; } .mat-web i { background: #475569; }
+.mat-subida { border-style: dashed; background: var(--sup2); }
+.mat-subida .mat-sub-tx { display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; font-size: 13px; max-width: 340px; min-width: 0; }
+.mat-subida .mat-sub-tx small { color: var(--suave); white-space: nowrap; }
+.mat-subida i { background: var(--acento) !important; }
+.mat-subida.con-error { border-color: var(--peligro); background: var(--peligro-sv); }
+.mat-subida.con-error i { background: var(--peligro) !important; }
+.mat-subida.con-error small { color: var(--peligro); }
+.giro { width: 12px; height: 12px; border: 2px solid rgba(255,255,255,.4); border-top-color: #fff; border-radius: 50%; display: inline-block; animation: giro .8s linear infinite; }
+@keyframes giro { to { transform: rotate(360deg); } }
+.mat-unidad { padding: 0; }
+.mat-unidad > summary { list-style: none; cursor: pointer; padding: 14px 18px; display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 18px; }
+.mat-unidad > summary::-webkit-details-marker { display: none; }
+.mat-udocs { padding: 12px 18px 14px; border-top: 1px solid var(--linea); }
+.mat-clases { border-top: 1px solid var(--linea); }
+.mat-clase { display: flex; gap: 10px; align-items: center; padding: 8px 12px 8px 14px; border-radius: 0; flex-wrap: wrap; min-height: 54px; }
+.mat-clase + .mat-clase { border-top: 1px solid var(--linea); }
+.mat-clase.mat-sobre { border-radius: 10px; }
+.mat-clase .ini { width: 32px; height: 32px; font-size: 14px; flex-shrink: 0; }
+.mat-cnom { flex: 1 1 200px; font-weight: 700; font-size: 15px; min-width: 0; }
+.mat-clase .mat-lista { flex: 2 1 280px; gap: 6px; }
+.btn-mas { width: 40px; height: 40px; border-radius: 10px; border: 2px dashed var(--linea2); background: transparent; color: var(--acento); font-size: 22px; font-weight: 700; flex-shrink: 0; cursor: pointer; }
+.btn-mas:hover { border-color: var(--acento); background: var(--acento-sv); }
+.mat-soltar { display: flex; flex-direction: column; gap: 8px; padding: 14px; border: 2px dashed var(--linea2); border-radius: 12px; background: var(--sup2); }
+.mat-zona-modal.mat-sobre .mat-soltar { border-color: var(--acento); }
+.mat-zona-modal.mat-zona { padding: 4px; }
+@media (max-width: 640px) { .mat-clase .mat-lista { flex-basis: 100%; order: 3; } }
+.mat-priv { font-size: 12px; margin-left: -2px; }
+.mat-check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; cursor: pointer; }
+.mat-check input { width: 22px; height: 22px; flex-shrink: 0; margin: 0; accent-color: var(--acento); }
+
 </style>
 </head>
 <body>
@@ -402,7 +442,7 @@ https://github.com/nodeca/pako/blob/main/LICENSE
    Núcleo: datos sin conexión, cálculos y sincronización con Google Drive
    ===================================================================== */
 
-const APP_VERSION = '2.5.4';
+const APP_VERSION = '2.6.1';
 
 /* ---------- Currículo: competencias y capacidades del CNEB (Inglés) ---------- */
 const COMPETENCIAS = [
@@ -479,11 +519,13 @@ const DB = {
 function idbAbrir() {
   return new Promise((res, rej) => {
     if (!('indexedDB' in window)) { res(null); return; }
-    const r = indexedDB.open('registro-auxiliar', 1);
+    const r = indexedDB.open('registro-auxiliar', 2);
     r.onupgradeneeded = () => {
       const db = r.result;
       if (!db.objectStoreNames.contains('recs')) db.createObjectStore('recs', { keyPath: 'k' });
       if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'k' });
+      // Archivos de Materiales esperando subir a Drive (se guardan aquí aunque no haya internet)
+      if (!db.objectStoreNames.contains('subidas')) db.createObjectStore('subidas', { keyPath: 'id' });
     };
     r.onsuccess = () => res(r.result);
     r.onerror = () => res(null);
@@ -975,7 +1017,7 @@ function limpiarEnlace(t) {
 }
 function syncEstado() {
   const c = syncConfig();
-  const pend = DB.sucios.size + (DB.meta.colaCorreo || []).length;
+  const pend = DB.sucios.size + (DB.meta.colaCorreo || []).length + (typeof subidasPendientes === 'function' ? subidasPendientes() : 0);
   if (!c) return { tipo: 'local', texto: pend ? 'Guardado en este equipo · respaldo sin configurar' : 'Guardado en este equipo', corto: 'Solo aquí' };
   if (!navigator.onLine) return { tipo: 'offline', texto: 'Sin internet · ' + pend + ' cambio' + (pend === 1 ? '' : 's') + ' guardado' + (pend === 1 ? '' : 's') + ' aquí', corto: 'Sin internet · ' + pend };
   if (SYNC.enCurso) return { tipo: 'sync', texto: 'Guardando en Drive…', corto: 'Guardando…' };
@@ -998,7 +1040,7 @@ async function sincronizar(opts) {
   const claves = Array.from(DB.sucios);
   const cambios = claves.map(k => { const r = DB.recs.get(k); return { k, t: r.t, dev: r.dev, v: r.v, d: r.d }; });
   const correo = (DB.meta.colaCorreo || []).slice(0, 10);
-  const cuerpo = { accion: opts.accion || 'sync', clave: c.clave, since: DB.meta.since || 0, epoca: DB.meta.epoca || null, dev: DB.meta.dev, cambios, correo, para: cfg().correo, extra: opts.extra || null };
+  const cuerpo = { accion: opts.accion || 'sync', clave: c.clave, since: DB.meta.since || 0, epoca: DB.meta.epoca || null, dev: DB.meta.dev, cambios, correo, para: cfg().correo, extra: opts.extra || null, papelera: (DB.meta.colaPapelera || []).slice(0, 20), compartir: (DB.meta.colaCompartir || []).slice(0, 20) };
   try {
     const t0 = Date.now();
     const r = await fetch(c.url, { method: 'POST', body: JSON.stringify(cuerpo), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' });
@@ -1015,6 +1057,9 @@ async function sincronizar(opts) {
     claves.forEach(k => { const r2 = DB.recs.get(k); const env = cambios.find(x => x.k === k); if (r2 && env && r2.t === env.t) DB.sucios.delete(k); });
     dbFusionar(j.recs || [], false);
     DB.meta.since = j.ahora; DB.meta.epoca = j.epoca; DB.meta.ultimaSync = Date.now();
+    DB.meta.gsVersion = j.version || '';
+    if (j.compartirOk && j.compartirOk.length) DB.meta.colaCompartir = (DB.meta.colaCompartir || []).filter(c => !j.compartirOk.includes(c.id));
+    if (j.papeleraOk && j.papeleraOk.length) DB.meta.colaPapelera = (DB.meta.colaPapelera || []).filter(id => !j.papeleraOk.includes(id));
     if (j.enviados && j.enviados.length) {
       DB.meta.colaCorreo = (DB.meta.colaCorreo || []).filter(m => !j.enviados.includes(m.id));
       j.enviados.forEach(id => (id.split(',')).forEach(cid => { ['cit', 'inf'].forEach(t => { const x = dbGet(t, cid); if (x && !x.enviada) dbPut(t, cid, Object.assign({}, x, { enviada: Date.now() })); }); }));
@@ -1022,6 +1067,7 @@ async function sincronizar(opts) {
     SYNC.error = null; guardarMeta(); await idbVaciar();
     SYNC.enCurso = false; avisarCambio();
     if (DB.sucios.size || (DB.meta.colaCorreo || []).length) programarSync(1500);
+    if (typeof procesarSubidas === 'function') procesarSubidas();
     return { ok: true, respuesta: j };
   } catch (e) {
     SYNC.error = e.message || String(e); SYNC.enCurso = false; avisarCambio();
@@ -1617,6 +1663,7 @@ VISTAS.aula = (p) => {
   if (sub === 'asistencia') return vistaAsistencia(aulaId);
   if (sub === 'fichas') return vistaBotonesFecha(aulaId, p[3] || 'cotejo');
   if (sub === 'registros') return vistaRegistros(aulaId, p[3] || 'general');
+  if (sub === 'materiales') return vistaMaterialesHoy(aulaId);
   const f = hoy(); const bim = bimestreDe(f);
   const ests = estudiantes(aulaId).filter(e => estMatriculado(e, f));
   let P = 0, F = 0, J = 0, T = 0, C = 0;
@@ -1634,6 +1681,7 @@ VISTAS.aula = (p) => {
     m('#/aula/' + aulaId + '/asistencia', 'Paso 1', 'Asistencia', 'Controla quién aparece en las fichas de hoy. Conducta y citaciones.', 'prim') +
     m('#/aula/' + aulaId + '/fichas/cotejo', 'Evaluar', 'Fichas de cotejo', 'Sí / No por criterio + participación.') +
     m('#/aula/' + aulaId + '/fichas/rubrica', 'Evaluar', 'Rúbricas', 'AD · A · B · C por criterio + participación.') +
+    (() => { const th = temaDeHoy(aulaId).tema; const n = th ? matsTema(th.id).length + matsUnidad(th.grado, th.bim, th.unidad || '').length : 0; return m('#/aula/' + aulaId + '/materiales', 'Clase', 'Materiales de hoy', th ? esc(th.nombre) + ' · ' + (n ? n + ' material' + (n > 1 ? 'es' : '') : 'sin materiales aún') : 'Sesión, PPT, fichas y videos de la clase.'); })() +
     m('#/aula/' + aulaId + '/registros/general', 'Consultar', 'Registros', 'General, individual, por tema, estadísticas y mapa de calor.') +
     m('#/buscar?q=' + encodeURIComponent(a.grado + a.seccion), 'Buscar', 'Vista para padres', 'Busca un estudiante y muestra su historial completo.') +
     m('#/citaciones?aula=' + aulaId, 'Conducta', cits.length ? cits.length + (cits.length > 1 ? ' citaciones' : ' citación') + ' hoy' : 'Citaciones', cits.length ? (cits.every(c => c.enviada) ? 'Ya enviadas a tu correo.' : 'Se envían a tu correo al cerrar la clase.') : 'Historial de citaciones de la sección.', cits.length ? 'avi' : '') +
@@ -2271,7 +2319,7 @@ ACC.excelProgreso = d => exportarProgresoExcel(d.aula);
 /* =====================================================================
    INTERFAZ: AJUSTES
    ===================================================================== */
-const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['nomina', 'Nómina oficial'], ['temario', 'Temario'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Seguridad: bloqueo y segundo paso'], ['apariencia', 'Apariencia'], ['reinicio', 'Borrar y reiniciar (con respaldo)']];
+const SEC_AJ = [['inicio', 'Primeros pasos'], ['contrasena', 'Cambiar contraseña'], ['secciones', 'Grados y secciones a cargo'], ['nomina', 'Nómina oficial'], ['temario', 'Temario'], ['materiales', 'Materiales'], ['bimestres', 'Fechas de bimestres'], ['citacion', 'Datos para la citación'], ['reglas', 'Reglas de calificación'], ['respaldo', 'Respaldo en Google Drive'], ['patron', 'Seguridad: bloqueo y segundo paso'], ['apariencia', 'Apariencia'], ['reinicio', 'Borrar y reiniciar (con respaldo)']];
 VISTAS.ajustes = (p, q) => {
   const sec = p[1] || 'secciones';
   const menu = '<nav class="col" style="gap:6px;flex:1 1 240px;max-width:320px">' + SEC_AJ.map(s => '<a href="#/ajustes/' + s[0] + '" class="item" style="min-height:52px;text-decoration:none;font-weight:700;' + (s[0] === sec ? 'background:var(--acento);color:#fff' : 'color:' + (s[0] === 'reinicio' ? 'var(--peligro)' : 'inherit')) + '">' + s[1] + '</a>').join('') + '<div class="muted peq" style="padding:8px">Versión ' + APP_VERSION + '</div></nav>';
@@ -2545,6 +2593,7 @@ ACC.guardarReglas = () => { setCfg({ bastante: Math.max(1, Number(document.getEl
 AJ.respaldo = () => { const s = syncConfig() || {}; const est = syncEstado();
   return '<h1 style="font-size:26px">Respaldo en Google Drive</h1><div class="aviso ' + (est.tipo === 'ok' ? 'verde' : est.tipo === 'error' ? 'rojo' : '') + '">' + esc(est.texto) + (SYNC.error ? '<br>Detalle: ' + esc(SYNC.error) : '') + '</div>' +
   '<form class="tarjeta col" data-envio="guardarSync"><div class="campo"><label for="su">Enlace del respaldo, o el código que empieza con RA-</label><input id="su" class="inp" value="' + esc(s.url || '') + '" placeholder="Pega aquí el código RA-… copiado de la laptop (o el enlace …/exec)" autocapitalize="none" autocorrect="off" spellcheck="false"></div><div class="campo"><label for="sk">Clave del respaldo (la misma que pusiste en Code.gs)</label><input id="sk" type="password" class="inp" value="' + esc(s.clave || '') + '" autocapitalize="none" autocorrect="off" spellcheck="false"><label class="fila peq" style="gap:8px"><input type="checkbox" data-cambio="verClave" data-id="sk" style="width:22px;height:22px"> Mostrar la clave</label></div><div class="fila"><button class="btn prim">Guardar y sincronizar</button>' + (s.url ? '<button type="button" class="btn" data-act="estadoSync">Sincronizar ahora</button><button type="button" class="btn peligro" data-act="quitarSync">Desconectar</button>' : '') + '</div>' +
+  (s.url && DB.meta.gsVersion !== undefined ? '<p class="peq" style="margin:0">Código de Apps Script: ' + (DB.meta.gsVersion >= GS_MIN ? '<b>' + esc(DB.meta.gsVersion) + '</b> ✓' : '<b>versión anterior</b> · para subir archivos de Materiales, <button type="button" class="btn chico" data-act="pasosCodeGs">actualízalo</button>') + '</p>' : '') +
   '<p class="muted peq" style="margin:0;line-height:1.5">Todo se guarda primero en este equipo, aunque no haya internet. Cuando hay conexión, se sube solo a tu Drive y baja lo que hiciste en otros equipos. Drive guarda además una copia diaria de los últimos 30 días.</p></form>' +
   (s.url ? '<div class="tarjeta col"><h2 style="font-size:19px">Conectar otro equipo</h2><p class="muted peq" style="margin:0;line-height:1.5">Copia el código y envíatelo (WhatsApp, correo). En la tableta toca «Ya uso el registro en otro equipo» y pégalo. Así no tienes que escribir el enlace ni la clave. Trátalo como una contraseña: no lo compartas con nadie.</p><div class="fila"><button class="btn prim" data-act="copiarCodigo">Copiar código para otro equipo</button></div></div>' : '') +
   '<div class="tarjeta col"><h2 style="font-size:19px">Copia en archivo</h2><div class="fila"><button class="btn" data-act="bajarRespaldo">Descargar respaldo completo (.json)</button><label class="btn" for="restau" style="cursor:pointer">Restaurar desde un respaldo</label><input id="restau" type="file" accept=".json,application/json" class="oculto" data-cambio="restaurar"></div><p class="muted peq" style="margin:0">Restaurar suma lo del archivo a lo que ya tienes; no borra nada.</p></div>'; };
@@ -3040,17 +3089,57 @@ function verificacionFechas(aulaId, bim) {
 
 'use strict';
 /* =====================================================================
-   MATERIALES: enlaces de Google Drive (programaciones, unidades,
-   sesiones, PPT, fichas…) por grado, por unidad y por tema
+   MATERIALES: programaciones, unidades, sesiones, PPT, fichas, videos…
+   por grado › bimestre › programación › unidades › clases.
+   Se guardan como enlaces; los archivos que arrastras se suben a tu Drive
+   (carpeta «Registro Auxiliar - Datos › Materiales») con el respaldo.
    ===================================================================== */
 
+/* ---------- Datos ---------- */
 function materiales(filtro) { return dbList('mat').filter(filtro).sort((a, b) => (a.creado || 0) - (b.creado || 0)); }
 function matsGrado(g) { return materiales(m => m.nivel === 'grado' && String(m.grado) === String(g)); }
+function matsBim(g, b) { return materiales(m => m.nivel === 'bim' && String(m.grado) === String(g) && Number(m.bim) === Number(b)); }
 function matsUnidad(g, b, u) { return materiales(m => m.nivel === 'unidad' && String(m.grado) === String(g) && Number(m.bim) === Number(b) && String(m.unidad || '') === String(u || '')); }
 function matsTema(temaId) { return temaId ? materiales(m => m.nivel === 'tema' && m.temaId === temaId) : []; }
-function tipoEnlace(u) {
+function matsDeDestino(d) {
+  return d.nivel === 'grado' ? matsGrado(d.grado) : d.nivel === 'bim' ? matsBim(d.grado, d.bim) : d.nivel === 'unidad' ? matsUnidad(d.grado, d.bim, d.unidad) : matsTema(d.tema);
+}
+/* Destino a partir de los data-* de un recuadro: nivel, grado, bim, unidad, tema */
+function destinoDe(ds) {
+  const d = { nivel: ds.nivel, grado: ds.grado || '', bim: ds.bim ? Number(ds.bim) : '', unidad: ds.unidad || '', tema: ds.tema || '' };
+  if (d.nivel === 'tema') { const t = dbGet('tema', d.tema); if (t) { d.grado = String(t.grado); d.bim = Number(t.bim); d.unidad = t.unidad || ''; } }
+  return d;
+}
+function attrsDestino(d) { return ['nivel', 'grado', 'bim', 'unidad', 'tema'].map(k => d[k] !== undefined && d[k] !== '' ? ' data-' + k + '="' + esc(d[k]) + '"' : '').join(''); }
+function nombreDestino(d) {
+  if (d.nivel === 'grado') return 'Documentos de ' + d.grado + '.° grado';
+  if (d.nivel === 'bim') return 'Programación · ' + d.grado + '.° grado · ' + romano(Number(d.bim)) + ' bimestre';
+  if (d.nivel === 'unidad') return (d.unidad ? 'Unidad ' + d.unidad : 'Sin unidad') + ' · ' + d.grado + '.° grado · ' + romano(Number(d.bim)) + ' bimestre';
+  const t = dbGet('tema', d.tema); return 'Clase: ' + (t ? (t.orden && t.orden < 100 ? t.orden + '. ' : '') + t.nombre : '');
+}
+/* Carpetas en Drive: Materiales › 2.° grado › IV bimestre › Unidad 7 › Clase 03 - Tema */
+function rutaDrive(d) {
+  const r = [d.grado + '.° grado'];
+  if (d.nivel === 'grado') { r.push('Documentos del grado'); return r; }
+  r.push(romano(Number(d.bim)) + ' bimestre');
+  if (d.nivel === 'bim') { r.push('Programación'); return r; }
+  r.push(d.unidad ? 'Unidad ' + d.unidad : 'Sin unidad');
+  if (d.nivel === 'tema') { const t = dbGet('tema', d.tema); if (t) r.push('Clase ' + (t.orden && t.orden < 100 ? pad2(t.orden) + ' - ' : '') + t.nombre); }
+  return r;
+}
+
+/* ---------- Tipo de material e íconos ---------- */
+function tipoEnlace(u, nombre) {
+  const n = String(nombre || '').toLowerCase();
+  if (/\.pptx?$|\.odp$|\.key$/.test(n)) return ['ppt', 'Presentación'];
+  if (/\.docx?$|\.odt$|\.rtf$/.test(n)) return ['doc', 'Documento'];
+  if (/\.xlsx?$|\.ods$|\.csv$/.test(n)) return ['xls', 'Hoja de cálculo'];
+  if (/\.pdf$/.test(n)) return ['pdf', 'PDF'];
+  if (/\.(mp4|mov|webm|avi|mkv)$/.test(n)) return ['video', 'Video'];
+  if (/\.(mp3|wav|m4a|ogg)$/.test(n)) return ['audio', 'Audio'];
+  if (/\.(png|jpe?g|gif|webp|heic)$/.test(n)) return ['img', 'Imagen'];
   u = String(u || '').toLowerCase();
-  if (u.includes('docs.google.com/presentation')) return ['ppt', 'Presentación'];
+  if (u.includes('docs.google.com/presentation') || u.includes('canva.com')) return ['ppt', 'Presentación'];
   if (u.includes('docs.google.com/document')) return ['doc', 'Documento'];
   if (u.includes('docs.google.com/spreadsheets')) return ['xls', 'Hoja de cálculo'];
   if (u.includes('docs.google.com/forms') || u.includes('forms.gle')) return ['form', 'Formulario'];
@@ -3062,45 +3151,300 @@ function tipoEnlace(u) {
   if (u.includes('drive.google.com')) return ['archivo', 'Archivo de Drive'];
   return ['web', 'Enlace'];
 }
-const ICO_MAT = { ppt: '▶', doc: '≡', xls: '▦', form: '☑', video: '►', pdf: 'PDF', carpeta: '▤', archivo: '◧', web: '↗' };
-function chipMaterial(m, borrable) {
-  const t = tipoEnlace(m.url);
-  return '<span class="mat-chip mat-' + t[0] + '"><a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(t[1] + ' · se abre en otra pestaña') + '"><i aria-hidden="true">' + ICO_MAT[t[0]] + '</i>' + esc(m.titulo || t[1]) + '</a>' +
-    (borrable ? '<button data-act="quitarMaterial" data-id="' + m.id + '" aria-label="Quitar enlace ' + esc(m.titulo || t[1]) + '">×</button>' : '') + '</span>';
+const ICO_MAT = { ppt: 'PPT', doc: 'DOC', xls: 'XLS', form: '☑', video: '▶', audio: '♪', img: 'IMG', pdf: 'PDF', carpeta: '▤', archivo: '◧', web: '↗' };
+function tipoMat(m) { return tipoEnlace(m.url, m.archivo && m.archivo.nombre); }
+function tamTexto(b) { return b >= 1048576 ? (b / 1048576).toFixed(1).replace('.0', '') + ' MB' : Math.max(1, Math.round(b / 1024)) + ' KB'; }
+function chipMaterial(m, borrable, mini) {
+  const t = tipoMat(m);
+  const priv = m.archivo && m.archivo.privado;
+  const info = t[1] + (m.archivo ? ' en tu Drive · ' + tamTexto(m.archivo.tamano || 0) + (priv ? ' · Privado: ábrelo con tu cuenta del respaldo' : ' · cualquiera con el enlace puede verlo') : '') + ' · se abre en otra pestaña';
+  return '<span class="mat-chip mat-' + t[0] + (mini ? ' mini' : '') + '"><a href="' + esc(m.url) + '" target="_blank" rel="noopener noreferrer" title="' + esc(info) + '"><i aria-hidden="true">' + ICO_MAT[t[0]] + '</i><span class="mat-nom">' + esc(m.titulo || t[1]) + '</span>' + (priv ? '<span class="mat-priv" aria-label="privado">🔒</span>' : '') + '</a>' +
+    (borrable ? '<button data-act="quitarMaterial" data-id="' + m.id + '" aria-label="Quitar ' + esc(m.titulo || t[1]) + '">×</button>' : '') + '</span>';
 }
+
+/* ---------- Recuadro de materiales (acepta archivos arrastrados) ---------- */
 function bloqueMateriales(lista, datos, titulo, vacio) {
-  const attrs = Object.keys(datos).map(k => ' data-' + k + '="' + esc(datos[k]) + '"').join('');
-  return '<div class="mat-bloque">' + (titulo ? '<span class="etq">' + titulo + '</span>' : '') + '<div class="mat-lista">' + lista.map(m => chipMaterial(m, true)).join('') +
-    (!lista.length && vacio ? '<span class="muted peq">' + vacio + '</span>' : '') +
-    '<button class="btn chico punteado" data-act="nuevoMaterial"' + attrs + '>+ Enlace de Drive</button></div></div>';
+  const d = destinoDe(datos);
+  return '<div class="mat-bloque mat-zona"' + attrsDestino(d) + '>' + (titulo ? '<span class="etq">' + titulo + '</span>' : '') + '<div class="mat-lista">' + lista.map(m => chipMaterial(m, true)).join('') + chipsSubida(d) +
+    (!lista.length && vacio && !subidasDe(d).length ? '<span class="muted peq">' + vacio + '</span>' : '') +
+    '<button class="btn chico punteado" data-act="nuevoMaterial"' + attrsDestino(d) + '>+ Agregar</button></div></div>';
 }
-ACC.nuevoMaterial = d => {
-  UI._mat = Object.assign({}, d);
-  const para = d.nivel === 'grado' ? 'Documentos de ' + d.grado + '.° grado (programación anual, experiencias, etc.)' : d.nivel === 'unidad' ? (d.unidad ? 'Unidad ' + d.unidad : 'Sin unidad') + ' · ' + d.grado + '.° grado · ' + romano(Number(d.bim)) + ' bimestre' : 'Tema: ' + ((dbGet('tema', d.tema) || {}).nombre || '');
-  abrirModal({ titulo: 'Agregar enlace', cuerpo: '<p class="muted" style="margin:0">' + esc(para) + '</p>' +
-    '<div class="campo"><label for="mUrl">Enlace (cópialo de Drive con «Compartir › Copiar enlace»)</label><input id="mUrl" class="inp" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://docs.google.com/…"></div>' +
-    '<div class="campo"><label for="mTit">Nombre que verás (opcional)</label><input id="mTit" class="inp" placeholder="Ej.: PPT sesión 1 · Sesión de aprendizaje · Ficha de trabajo"></div>' +
-    '<p class="muted peq" style="margin:0;line-height:1.45">El archivo sigue en tu Drive; aquí solo se guarda el enlace. Para abrirlo sin internet, márcalo como «Disponible sin conexión» en la app de Drive.</p>',
-    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarMaterial">Guardar</button>' });
-  setTimeout(() => { const i = document.getElementById('mUrl'); if (i) i.focus(); }, 50);
+
+/* ---------- Agregar: varios enlaces a la vez o archivos del equipo ---------- */
+ACC.nuevoMaterial = ds => {
+  const d = destinoDe(ds); UI._mat = d;
+  const puedeSubir = !!syncConfig();
+  abrirModal({ titulo: 'Agregar materiales', cuerpo: '<div class="col mat-zona mat-zona-modal"' + attrsDestino(d) + ' style="gap:14px">' +
+    '<p style="margin:0;font-weight:700">' + esc(nombreDestino(d)) + '</p>' +
+    '<div class="campo"><label for="mUrl">Pega uno o varios enlaces (uno por línea)</label><textarea id="mUrl" class="inp" rows="4" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="https://docs.google.com/…&#10;PPT sesión 3 https://docs.google.com/presentation/…&#10;Video https://youtu.be/…"></textarea>' +
+    '<span class="muted peq" style="line-height:1.45">Si escribes un nombre antes del enlace, en la misma línea, lo verás con ese nombre.</span></div>' +
+    '<div class="campo"><label for="mTit">Nombre (si pegas un solo enlace, opcional)</label><input id="mTit" class="inp" placeholder="Ej.: Sesión de aprendizaje · PPT · Ficha de trabajo"></div>' +
+    '<div class="mat-soltar"><b>Archivos de este equipo</b><span class="muted peq">' + (puedeSubir ? 'Arrastra aquí la sesión (.docx), el PPT, el PDF… o elígelos. Se suben a tu Drive (máx. ' + MAX_MB + ' MB cada uno).' : 'Para subir archivos, primero conecta el respaldo en Ajustes › Respaldo en Google Drive. Los enlaces sí se pueden guardar.') + '</span>' +
+    (puedeSubir ? '<label class="btn chico" for="mArch" style="cursor:pointer;align-self:flex-start">Elegir archivos…</label><input id="mArch" type="file" multiple class="oculto" data-cambio="elegirArchivos">' +
+      '<label class="mat-check"><input type="checkbox" id="mPriv"' + (UI.matPrivado ? ' checked' : '') + ' data-cambio="recordarPrivado"><span><b>Privado</b> · solo tu cuenta del respaldo podrá abrirlo. Úsalo para documentos con datos de estudiantes (nóminas, notas, informes).</span></label>' : '') + '</div></div>',
+    pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cancelar</button><button class="btn prim" data-act="guardarMaterial">Guardar enlaces</button>' });
+  setTimeout(() => { const i = document.getElementById('mUrl'); if (i && !matchMedia('(pointer: coarse)').matches) i.focus(); }, 50);
 };
+/* Lee varias líneas: «nombre opcional + enlace». Devuelve cuántos guardó */
+function agregarEnlaces(texto, d, nombreUnico) {
+  const filas = [];
+  String(texto || '').split(/\r?\n/).forEach(l => {
+    const urls = l.match(/https?:\/\/[^\s<>"']+/g); if (!urls) return;
+    const nombre = l.replace(/https?:\/\/[^\s<>"']+/g, ' ').replace(/^[\s\-–—:|·•*\d.)]+|[\s\-–—:|·•]+$/g, '').trim();
+    urls.forEach(u => filas.push({ url: u.replace(/[),.;]+$/, ''), titulo: urls.length === 1 ? nombre : '' }));
+  });
+  if (filas.length === 1 && nombreUnico && !filas[0].titulo) filas[0].titulo = nombreUnico;
+  const yaEsta = new Set(matsDeDestino(d).map(m => m.url));
+  let n = 0, rep = 0, t = Date.now();
+  filas.forEach(f => {
+    if (yaEsta.has(f.url)) { rep++; return; } yaEsta.add(f.url);
+    dbPut('mat', uid(), { nivel: d.nivel, grado: d.grado, bim: d.bim, unidad: d.unidad, temaId: d.tema || '', url: f.url, titulo: f.titulo.slice(0, 80), creado: t++ }); n++;
+  });
+  if (n) programarSync();
+  return { n, rep };
+}
 ACC.guardarMaterial = () => {
-  const d = UI._mat || {}; const txt = document.getElementById('mUrl').value.trim();
-  const m = txt.match(/https?:\/\/[^\s<>"']+/); if (!m) { toast('Pega un enlace que empiece con https://', 'error'); return; }
-  const rec = { nivel: d.nivel, grado: d.grado || '', bim: d.bim ? Number(d.bim) : '', unidad: d.unidad || '', temaId: d.tema || '', url: m[0], titulo: document.getElementById('mTit').value.trim(), creado: Date.now() };
-  if (d.nivel === 'tema') { const t = dbGet('tema', d.tema); if (t) { rec.grado = t.grado; rec.bim = t.bim; rec.unidad = t.unidad || ''; } }
-  dbPut('mat', uid(), rec); cerrarModal(); programarSync(); toast('Enlace guardado.'); render({ mantener: true });
-  if (d.nivel === 'tema') setTimeout(() => { const det = document.querySelector('.tema-det[data-id="' + d.tema + '"]'); if (det) det.open = true; }, 30);
+  const d = UI._mat || {};
+  const r = agregarEnlaces(document.getElementById('mUrl').value, d, document.getElementById('mTit').value.trim());
+  if (!r.n && !r.rep) { toast('Pega al menos un enlace que empiece con https://', 'error'); return; }
+  cerrarModal(); toast(r.n ? (r.n === 1 ? 'Enlace guardado.' : r.n + ' enlaces guardados.') + (r.rep ? ' ' + r.rep + ' ya estaba(n).' : '') : 'Ese enlace ya estaba guardado aquí.');
+  render({ mantener: true });
 };
-ACC.quitarMaterial = d => { const m = dbGet('mat', d.id); if (!m) return;
-  confirmar('Quitar enlace', 'Se quita «' + (m.titulo || tipoEnlace(m.url)[1]) + '» de aquí. El archivo en tu Drive no se borra.', 'Quitar', () => { dbDel('mat', d.id); programarSync(); render({ mantener: true }); }, true); };
-/* En la ficha o rúbrica: los materiales del tema y de su unidad, para abrirlos en clase */
+function privadoElegido() { const c = document.getElementById('mPriv'); return !!(c && c.checked); }
+CAMBIO.recordarPrivado = (v, ds, el) => { UI.matPrivado = el.checked; };
+CAMBIO.elegirArchivos = (v, ds, el) => { const d = UI._mat; const fs = Array.from(el.files || []); if (!fs.length || !d) return; const priv = privadoElegido(); cerrarModal(); encolarArchivos(fs, d, { privado: priv }); };
+
+/* ---------- Quitar ---------- */
+ACC.quitarMaterial = ds => {
+  const m = dbGet('mat', ds.id); if (!m) return; UI._quitar = ds.id;
+  const nom = m.titulo || tipoMat(m)[1];
+  if (!m.archivo || !m.archivo.id) { confirmar('Quitar enlace', 'Se quita «' + esc(nom) + '» de aquí. El archivo en tu Drive no se borra.', 'Quitar', () => { dbDel('mat', ds.id); programarSync(); render({ mantener: true }); }, true); return; }
+  const priv = !!m.archivo.privado;
+  abrirModal({ titulo: 'Archivo en tu Drive', cuerpo: '<p style="margin:0;line-height:1.5">«' + esc(nom) + '» es un archivo que subiste a tu Drive desde el registro.</p>' +
+    '<div class="tarjeta col" style="gap:8px;background:var(--sup2);box-shadow:none"><span class="etq">Quién puede abrirlo</span><b>' + (priv ? '🔒 Privado: solo tu cuenta del respaldo' : 'Cualquiera con el enlace (solo ver)') + '</b>' +
+    '<button class="btn chico" data-act="cambiarPrivacidad" style="align-self:flex-start">' + (priv ? 'Compartir con enlace' : 'Hacerlo privado') + '</button></div>' +
+    '<p class="muted peq" style="margin:0;line-height:1.5">Si lo envías a la papelera, Drive lo guarda 30 días por si te arrepientes.</p>',
+    pie: '<button class="btn" data-act="cerrarModal">Cancelar</button><span style="flex:1"></span><button class="btn" data-act="quitarMatSolo">Quitar solo de aquí</button><button class="btn peligro lleno" data-act="quitarMatPapelera">Quitar y enviar a la papelera</button>' });
+};
+ACC.cambiarPrivacidad = () => {
+  const m = dbGet('mat', UI._quitar); if (!m || !m.archivo) return;
+  if (!(DB.meta.gsVersion >= GS_MIN)) { cerrarModal(); toast('Para cambiar quién puede abrir el archivo, actualiza el Code.gs a la versión ' + GS_MIN + ' (Ajustes › Materiales).', 'error'); return; }
+  const privado = !m.archivo.privado;
+  dbPut('mat', UI._quitar, Object.assign({}, m, { archivo: Object.assign({}, m.archivo, { privado }) }));
+  DB.meta.colaCompartir = (DB.meta.colaCompartir || []).filter(c => c.id !== m.archivo.id).concat({ id: m.archivo.id, privado }); guardarMeta();
+  cerrarModal(); programarSync(500); render({ mantener: true });
+  toast((privado ? 'Ahora es privado.' : 'Ahora cualquiera con el enlace puede verlo.') + (navigator.onLine ? '' : ' Se aplica en Drive cuando haya internet.'));
+};
+ACC.quitarMatSolo = () => { dbDel('mat', UI._quitar); cerrarModal(); programarSync(); render({ mantener: true }); };
+ACC.quitarMatPapelera = () => {
+  const m = dbGet('mat', UI._quitar); if (m && m.archivo && m.archivo.id) { DB.meta.colaPapelera = (DB.meta.colaPapelera || []).concat(m.archivo.id); guardarMeta(); }
+  dbDel('mat', UI._quitar); cerrarModal(); programarSync(500); render({ mantener: true });
+  toast(navigator.onLine ? 'Quitado. El archivo pasa a la papelera de Drive.' : 'Quitado. El archivo irá a la papelera de Drive cuando haya internet.');
+};
+
+/* =====================================================================
+   SUBIR ARCHIVOS A DRIVE: cola que sobrevive sin internet y al cerrar la app
+   ===================================================================== */
+const MAX_MB = 25;
+const GS_MIN = '2.6.1';   // versión de Code.gs que entiende «privado»
+const SUB = { cola: [], enCurso: false, blobs: new Map(), reintento: null };
+function subidasPendientes() { return SUB.cola.filter(x => !x.error).length; }
+function mismoDestino(a, b) { return a.nivel === b.nivel && String(a.grado) === String(b.grado) && String(a.bim || '') === String(b.bim || '') && String(a.unidad || '') === String(b.unidad || '') && String(a.tema || '') === String(b.tema || ''); }
+function subidasDe(d) { return SUB.cola.filter(x => mismoDestino(x.destino, d)); }
+function chipsSubida(d) {
+  return subidasDe(d).map(x => '<span class="mat-chip mat-subida' + (x.error ? ' con-error' : '') + '" title="' + esc(x.error || '') + '"><span class="mat-sub-tx"><i aria-hidden="true">' + (x.error ? '!' : x.estado === 'subiendo' ? '<span class="giro"></span>' : '⇡') + '</i><span class="mat-nom">' + esc(x.nombre) + '</span><small>' +
+    (x.error ? esc(x.error) : x.estado === 'subiendo' ? 'Subiendo ' + tamTexto(x.tamano) + '…' : !navigator.onLine ? 'Sin internet · subirá después' : 'En cola') + '</small></span>' +
+    (x.error ? '<button data-act="reintentarSubida" data-id="' + x.id + '" aria-label="Reintentar" title="Reintentar">↻</button>' : '') +
+    (x.estado !== 'subiendo' ? '<button data-act="cancelarSubida" data-id="' + x.id + '" aria-label="Cancelar subida de ' + esc(x.nombre) + '">×</button>' : '') + '</span>').join('');
+}
+function idbSub(modo, fn) {
+  return new Promise(res => {
+    if (!DB.idb || !DB.idb.objectStoreNames.contains('subidas')) { res(null); return; }
+    try { const tx = DB.idb.transaction('subidas', modo); const q = fn(tx.objectStore('subidas')); tx.oncomplete = () => res(q && q.result); tx.onerror = () => res(null); } catch (e) { res(null); }
+  });
+}
+async function subidasCargar() {
+  const l = (await idbSub('readonly', st => st.getAll())) || [];
+  SUB.cola = l.map(x => { const o = Object.assign({}, x); delete o.blob; if (o.estado === 'subiendo') o.estado = ''; return o; }).sort((a, b) => a.creado - b.creado);
+}
+async function encolarArchivos(files, d, op) {
+  if (!syncConfig()) { toast('Para subir archivos a Drive, primero conecta el respaldo (Ajustes › Respaldo en Google Drive).', 'error'); return; }
+  let n = 0;
+  for (const f of files) {
+    if (!f.size) { toast('«' + f.name + '» está vacío o es una carpeta. Arrastra los archivos, no la carpeta.', 'error'); continue; }
+    if (f.size > MAX_MB * 1048576) { toast('«' + f.name + '» pesa ' + tamTexto(f.size) + ' (máximo ' + MAX_MB + ' MB). Súbelo a Drive y pega su enlace.', 'error'); continue; }
+    const rec = { id: uid(), nombre: f.name, tamano: f.size, mime: f.type || '', destino: Object.assign({}, d), ruta: rutaDrive(d), creado: Date.now() + n, estado: '', privado: !!(op && op.privado) };
+    const guardado = await idbSub('readwrite', st => st.put(Object.assign({ blob: f }, rec)));
+    if (guardado === null) SUB.blobs.set(rec.id, f);   // sin IndexedDB: queda en memoria mientras la app esté abierta
+    SUB.cola.push(rec); n++;
+  }
+  if (!n) return;
+  toast(n === 1 ? 'Archivo en cola para subir a Drive.' : n + ' archivos en cola para subir a Drive.');
+  render({ mantener: true }); refrescarEstado(); procesarSubidas();
+}
+function leerBase64(blob) {
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).replace(/^data:[^,]*,/, '')); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+}
+function repintarSubidas() { if (UI.sesionAbierta && !UI.modal && !(document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName))) render({ mantener: true }); refrescarEstado(); }
+async function procesarSubidas() {
+  const c = syncConfig();
+  if (SUB.enCurso || !c || !navigator.onLine) return;
+  const x = SUB.cola.find(y => !y.error); if (!x) return;
+  SUB.enCurso = true; x.estado = 'subiendo'; repintarSubidas();
+  let reintentar = false;
+  try {
+    const fila = await idbSub('readonly', st => st.get(x.id));
+    const blob = (fila && fila.blob) || SUB.blobs.get(x.id);
+    if (!blob) { quitarDeCola(x.id); return; }
+    // Un Code.gs anterior compartiría el archivo con enlace: el privado espera a que se actualice
+    if (x.privado && !(DB.meta.gsVersion >= GS_MIN)) { x.error = 'Falta actualizar el Code.gs'; toast('Para subir archivos privados, actualiza el Code.gs a la versión ' + GS_MIN + '.', 'error'); return; }
+    const b64 = await leerBase64(blob);
+    // since muy alto: si el Code.gs aún no está actualizado, no devuelve todo el registro
+    const r = await fetch(c.url, { method: 'POST', body: JSON.stringify({ accion: 'subir', clave: c.clave, since: 9e15, dev: DB.meta.dev, nombre: x.nombre, mime: x.mime, ruta: x.ruta, privado: !!x.privado, b64 }), headers: { 'Content-Type': 'text/plain;charset=utf-8' }, redirect: 'follow' });
+    const j = await r.json();
+    if (j.ok && j.subido) {
+      const d = x.destino;
+      dbPut('mat', uid(), { nivel: d.nivel, grado: d.grado, bim: d.bim, unidad: d.unidad, temaId: d.tema || '', url: j.url, titulo: x.nombre.replace(/\.[a-z0-9]{2,5}$/i, '').slice(0, 80), archivo: { id: j.id, nombre: j.nombre || x.nombre, tamano: x.tamano, privado: !j.compartido }, creado: x.creado });
+      DB.meta.gsVersion = j.version || DB.meta.gsVersion; guardarMeta();
+      quitarDeCola(x.id); programarSync(800);
+      if (j.compartido === false && !x.privado) toast('«' + x.nombre + '» se subió, pero Drive no permitió compartirlo con enlace. Ábrelo con tu cuenta del respaldo.', 'error');
+    } else if (j.ok) {
+      DB.meta.gsVersion = ''; guardarMeta();
+      SUB.cola.forEach(y => { if (!y.error) y.error = 'Falta actualizar el Code.gs'; });
+      toast('Para subir archivos, actualiza una vez el código de Apps Script (Code.gs). Mira los pasos en Ajustes › Materiales.', 'error');
+    } else x.error = j.error || 'No se pudo subir';
+  } catch (e) {
+    reintentar = true;   // se cortó el internet o Drive tardó: se reintenta solo
+  } finally {
+    x.estado = ''; SUB.enCurso = false; repintarSubidas();
+    if (reintentar) { clearTimeout(SUB.reintento); SUB.reintento = setTimeout(procesarSubidas, 30000); }
+    else if (SUB.cola.some(y => !y.error)) setTimeout(procesarSubidas, 300);
+  }
+}
+function quitarDeCola(id) { SUB.cola = SUB.cola.filter(y => y.id !== id); SUB.blobs.delete(id); idbSub('readwrite', st => st.delete(id)); }
+ACC.reintentarSubida = ds => { SUB.cola.forEach(y => { if (y.id === ds.id || y.error === 'Falta actualizar el Code.gs') y.error = ''; }); render({ mantener: true }); procesarSubidas(); };
+ACC.cancelarSubida = ds => { quitarDeCola(ds.id); render({ mantener: true }); refrescarEstado(); };
+window.addEventListener('online', () => setTimeout(procesarSubidas, 1500));
+
+/* ---------- Arrastrar y soltar ---------- */
+function tieneArchivos(e) { return e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files'); }
+function zonaDe(e) { return e.target && e.target.closest ? e.target.closest('.mat-zona') : null; }
+let _zonaSobre = null;
+function marcarZona(z) { if (_zonaSobre && _zonaSobre !== z) _zonaSobre.classList.remove('mat-sobre'); _zonaSobre = z; if (z) z.classList.add('mat-sobre'); }
+document.addEventListener('dragover', e => {
+  const z = zonaDe(e);
+  if (z) { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; marcarZona(z); }
+  else { marcarZona(null); if (tieneArchivos(e)) { e.preventDefault(); e.dataTransfer.dropEffect = 'none'; } }   // que el navegador no abra el archivo y se salga de la app
+});
+document.addEventListener('dragleave', e => { if (!e.relatedTarget || !document.documentElement.contains(e.relatedTarget)) marcarZona(null); });
+document.addEventListener('drop', e => {
+  const z = zonaDe(e); marcarZona(null);
+  if (!z) { if (tieneArchivos(e)) { e.preventDefault(); toast('Suelta el archivo sobre un recuadro de materiales (grado, programación, unidad o clase).'); } return; }
+  e.preventDefault();
+  const d = destinoDe(z.dataset);
+  const fs = Array.from(e.dataTransfer.files || []);
+  if (fs.length) { const priv = UI.modal && z.closest('.modal') ? privadoElegido() : false; if (UI.modal) cerrarModal(); encolarArchivos(fs, d, { privado: priv }); return; }
+  // Un enlace arrastrado desde el navegador (por ejemplo, desde Drive o YouTube)
+  let txt = e.dataTransfer.getData('text/uri-list') || e.dataTransfer.getData('text/plain') || '', nombre = '';
+  const html = e.dataTransfer.getData('text/html');
+  if (html) { try { const a = new DOMParser().parseFromString(html, 'text/html').querySelector('a[href]'); if (a) { nombre = a.textContent.trim(); if (!/https?:/.test(txt)) txt = a.href; } } catch (x) { } }
+  txt = txt.split(/\r?\n/).filter(l => !l.startsWith('#')).join('\n');
+  const r = agregarEnlaces(txt, d, nombre);
+  if (r.n) { if (UI.modal) cerrarModal(); toast(r.n === 1 ? 'Enlace guardado.' : r.n + ' enlaces guardados.'); render({ mantener: true }); }
+  else if (r.rep) toast('Ese enlace ya estaba guardado aquí.');
+});
+
+/* =====================================================================
+   PESTAÑA «MATERIALES» (Ajustes)
+   ===================================================================== */
+AJ.materiales = q => {
+  const grados = Array.from(new Set(aulas().map(a => String(a.grado)))).sort();
+  const g = q.g || grados[0] || '2'; const b = Number(q.b || bimestreDe(hoy()));
+  const ts = temas(t => String(t.grado) === g && Number(t.bim) === b);
+  const unidades = []; ts.forEach(t => { const u = t.unidad || ''; if (!unidades.includes(u)) unidades.push(u); });
+  const cerradas = UI.matCerradas || (UI.matCerradas = new Set());
+  const aviso = !syncConfig() ? '<div class="aviso">Puedes guardar enlaces. Para <b>subir archivos</b> arrastrándolos, primero conecta el <a href="#/ajustes/respaldo">respaldo en Google Drive</a>.</div>'
+    : DB.meta.gsVersion !== undefined && !(DB.meta.gsVersion >= GS_MIN) ? '<div class="aviso"><b>Un paso para poder subir archivos:</b> actualiza el código de Apps Script (Code.gs) a la versión ' + GS_MIN + '. <button class="btn chico" data-act="pasosCodeGs" style="margin-left:6px">Ver los pasos</button></div>' : '';
+  const nUni = u => ts.filter(t => (t.unidad || '') === (u || ''));
+  const cuentaU = u => matsUnidad(g, b, u).length + nUni(u).reduce((s, t) => s + matsTema(t.id).length, 0);
+  const filaClase = t => {
+    const d = destinoDe({ nivel: 'tema', tema: t.id }); const ls = matsTema(t.id);
+    return '<div class="mat-clase mat-zona"' + attrsDestino(d) + '><span class="ini">' + (t.orden && t.orden < 100 ? t.orden : '•') + '</span><span class="mat-cnom">' + esc(t.nombre) + '</span>' +
+      '<div class="mat-lista">' + ls.map(m => chipMaterial(m, true, true)).join('') + chipsSubida(d) + '</div>' +
+      '<button class="btn-mas" data-act="nuevoMaterial"' + attrsDestino(d) + ' aria-label="Agregar materiales a ' + esc(t.nombre) + '" title="Agregar enlaces o archivos">+</button></div>';
+  };
+  return '<h1 style="font-size:26px">Materiales</h1><div class="fila">' + (grados.length ? grados : ['2']).map(x => '<a class="btn chico' + (x === g ? ' prim' : '') + '" href="#/ajustes/materiales?g=' + x + '&b=' + b + '">' + x + '.° grado</a>').join('') + '<span style="width:12px"></span>' + [1, 2, 3, 4].map(n => '<a class="btn chico' + (n === b ? ' prim' : '') + '" href="#/ajustes/materiales?g=' + g + '&b=' + n + '">' + romano(n) + ' Bim.</a>').join('') + '</div>' +
+    aviso +
+    '<p class="muted peq" style="margin:0;line-height:1.5">' + (matchMedia('(pointer: coarse)').matches ? 'Toca <b>+</b> para pegar enlaces o elegir archivos.' : 'Arrastra archivos desde tu computadora a cualquier recuadro, o usa <b>+</b> para pegar varios enlaces.') + ' Los archivos se guardan en tu Drive: <i>Registro Auxiliar - Datos › Materiales › ' + g + '.° grado › ' + romano(b) + ' bimestre</i>.</p>' +
+    '<div class="grid-2" style="align-items:start"><div class="tarjeta col" style="gap:8px">' + bloqueMateriales(matsGrado(g), { nivel: 'grado', grado: g }, 'Documentos de ' + g + '.° grado', 'Programación anual, carpeta pedagógica…') + '</div>' +
+    '<div class="tarjeta col" style="gap:8px">' + bloqueMateriales(matsBim(g, b), { nivel: 'bim', grado: g, bim: b }, 'Programación del ' + romano(b) + ' bimestre', 'Planificación bimestral, experiencia de aprendizaje…') + '</div></div>' +
+    (ts.length ? unidades.map(u => {
+      const clave = g + '|' + b + '|' + u; const abierta = !cerradas.has(clave);
+      const n = cuentaU(u);
+      return '<details class="tarjeta mat-unidad" data-clave="' + esc(clave) + '"' + (abierta ? ' open' : '') + '><summary><b>' + esc(u ? 'Unidad ' + u : 'Sin unidad') + '</b><span class="muted peq">' + nUni(u).length + ' clases · ' + (n ? n + ' material' + (n > 1 ? 'es' : '') : 'sin materiales') + '</span><span class="muted" aria-hidden="true" style="margin-left:auto">▾</span></summary>' +
+        '<div class="mat-udocs">' + bloqueMateriales(matsUnidad(g, b, u), { nivel: 'unidad', grado: g, bim: b, unidad: u }, 'Documentos de la unidad', 'Unidad didáctica, instrumentos…') + '</div>' +
+        '<div class="mat-clases">' + nUni(u).map(filaClase).join('') + '</div></details>';
+    }).join('') : '<div class="aviso">Aún no hay clases para ' + g + '.° grado en el ' + romano(b) + ' bimestre. Carga el <a href="#/ajustes/temario?g=' + g + '&b=' + b + '">temario</a> para ver aquí sus unidades y clases.</div>');
+};
+document.addEventListener('toggle', e => {
+  const d = e.target; if (!d.classList || !d.classList.contains('mat-unidad')) return;
+  const s = UI.matCerradas || (UI.matCerradas = new Set()); if (d.open) s.delete(d.dataset.clave); else s.add(d.dataset.clave);
+}, true);
+ACC.pasosCodeGs = () => abrirModal({ titulo: 'Actualizar Code.gs (una sola vez)', ancho: true, cuerpo: '<ol style="margin:0;padding-left:22px;line-height:1.7">' +
+  '<li>Entra a <b>script.google.com</b> con tu cuenta del respaldo y abre el proyecto del Registro Auxiliar.</li>' +
+  '<li>En <b>Code.gs</b>, borra todo y pega el código nuevo (versión ' + GS_MIN + '). No hace falta volver a escribir la clave: ya está guardada.</li>' +
+  '<li>Guarda (ícono de disco o Ctrl + S).</li>' +
+  '<li>Arriba a la derecha: <b>Implementar › Administrar implementaciones</b>.</li>' +
+  '<li>Toca el <b>lápiz ✎</b> (editar). En «Versión» elige <b>Nueva versión</b> y toca <b>Implementar</b>.</li>' +
+  '<li>Listo: el enlace /exec y la clave siguen igual. Vuelve aquí y toca «Comprobar».</li></ol>' +
+  '<p class="muted peq" style="margin:0;line-height:1.5">Si Google pide permisos otra vez, acéptalos: son los mismos de Drive y correo que ya usa el respaldo.</p>',
+  pie: '<span style="flex:1"></span><button class="btn" data-act="cerrarModal">Cerrar</button><button class="btn prim" data-act="comprobarCodeGs">Comprobar</button>' });
+ACC.comprobarCodeGs = async () => {
+  const r = await sincronizar(); cerrarModal();
+  if (!r.ok) { toast('No se pudo conectar con el respaldo: ' + (r.motivo || ''), 'error'); return; }
+  if (DB.meta.gsVersion >= GS_MIN) { toast('Code.gs actualizado. Ya puedes subir archivos.'); ACC.reintentarSubida({}); }
+  else toast('Todavía responde la versión anterior. Revisa que elegiste «Nueva versión» al implementar.', 'error');
+  render({ mantener: true });
+};
+
+/* =====================================================================
+   EN CLASE: materiales en la ficha y «Materiales de hoy» de cada sección
+   ===================================================================== */
 function materialesDeFicha(s, tema) {
   if (!tema) return '';
   const l = matsTema(s.temaId).concat(matsUnidad(tema.grado, tema.bim, tema.unidad || ''));
   if (!l.length) return '';
   return '<div class="chips mat-ficha"><span class="fld" style="min-height:0;border:0;background:none;padding:0"><span class="fl">Materiales</span></span>' + l.map(m => chipMaterial(m, false)).join('') + '</div>';
 }
+function temaConId(id) { const t = id && dbGet('tema', id); return t ? Object.assign({ id }, t) : null; }
+/* La clase de hoy: la de la ficha de hoy; si aún no hay ficha, el siguiente tema que no se ha trabajado en la sección */
+function temaDeHoy(aulaId) {
+  const f = hoy(); const bim = bimestreDe(f);
+  const ses = sesionesAula(aulaId, bim).filter(s => s.fecha === f && s.temaId && dbGet('tema', s.temaId));
+  if (ses.length) return { tema: temaConId(ses[0].temaId), origen: 'ficha' };
+  const ts = temasDeAula(aulaId, bim); if (!ts.length) return { tema: null, origen: '' };
+  const usados = ts.map((t, i) => temaUsado(aulaId, t.id) ? i : -1).filter(i => i >= 0);
+  const sig = usados.length ? ts[Math.max(...usados) + 1] : ts[0];
+  return sig ? { tema: sig, origen: 'siguiente' } : { tema: ts[ts.length - 1], origen: 'ultimo' };
+}
+function vistaMaterialesHoy(aulaId) {
+  const a = dbGet('aula', aulaId); const bim = bimestreDe(hoy());
+  const auto = temaDeHoy(aulaId);
+  const t = temaConId(UI.params.t) || auto.tema;
+  const origen = UI.params.t && t && auto.tema && t.id !== auto.tema.id ? 'Elegida por ti' : auto.origen === 'ficha' ? 'Según la ficha de hoy' : auto.origen === 'siguiente' ? 'Siguiente clase que aún no tiene ficha en ' + aulaNombre(aulaId) : auto.origen === 'ultimo' ? 'Última clase del temario' : '';
+  const ts = temasDeAula(aulaId, bim);
+  let sel = '', u = null;
+  ts.forEach(x => { if ((x.unidad || '') !== u) { sel += (u !== null ? '</optgroup>' : '') + '<optgroup label="' + esc(etiquetaUnidad(x)) + '">'; u = x.unidad || ''; } sel += '<option value="' + x.id + '"' + (t && x.id === t.id ? ' selected' : '') + '>' + esc((x.orden && x.orden < 100 ? x.orden + '. ' : '') + x.nombre) + (temaUsado(aulaId, x.id) ? ' ✓' : '') + '</option>'; });
+  if (u !== null) sel += '</optgroup>';
+  const cuerpo = !t ? '<div class="aviso">No hay temas del ' + romano(bim) + ' bimestre para ' + esc(a.grado) + '.° grado. Carga el <a href="#/ajustes/temario?g=' + esc(a.grado) + '&b=' + bim + '">temario</a> para ver aquí los materiales de cada clase.</div>' :
+    '<div class="tarjeta col" style="gap:10px"><div class="campo"><label for="mhTema">Clase</label><select id="mhTema" class="inp" data-cambio="matHoyTema" data-aula="' + aulaId + '">' + sel + '</select><span class="muted peq">' + esc(origen) + ' · ✓ = ya tiene ficha en esta sección</span></div></div>' +
+    '<div class="tarjeta col mat-hoy" style="gap:14px">' + bloqueMateriales(matsTema(t.id), { nivel: 'tema', tema: t.id }, 'Materiales de esta clase', 'Aún no hay materiales para esta clase.') +
+    bloqueMateriales(matsUnidad(t.grado, t.bim, t.unidad || ''), { nivel: 'unidad', grado: String(t.grado), bim: Number(t.bim), unidad: t.unidad || '' }, 'Documentos de la ' + esc(etiquetaUnidad(t).replace('Unidad', 'unidad')), '') +
+    (matsBim(t.grado, t.bim).length ? bloqueMateriales(matsBim(t.grado, t.bim), { nivel: 'bim', grado: String(t.grado), bim: Number(t.bim) }, 'Programación del ' + romano(Number(t.bim)) + ' bimestre', '') : '') + '</div>' +
+    '<a class="btn" href="#/ajustes/materiales?g=' + esc(a.grado) + '&b=' + bim + '" style="align-self:flex-start">Ver todos los materiales de ' + esc(a.grado) + '.° grado</a>';
+  return cabecera({ atras: '#/aula/' + aulaId, titulo: 'Materiales de hoy', sub: aulaNombre(aulaId) }) + '<main class="pag">' + cuerpo + '</main>';
+}
+CAMBIO.matHoyTema = (v, ds) => ir('#/aula/' + ds.aula + '/materiales?t=' + v);
 
 'use strict';
 /* =====================================================================
@@ -3108,6 +3452,7 @@ function materialesDeFicha(s, tema) {
    ===================================================================== */
 async function arrancar() {
   await dbIniciar();
+  await subidasCargar();
   aplicarTemaVisual();
   // Reglas acordadas el 17/10/2026: subir a AD pide 12 participaciones (antes 1)
   const g = dbGet('cfg', 'general');
@@ -3115,6 +3460,7 @@ async function arrancar() {
   // Después de recibir lo último de Drive, cada ficha queda en el bimestre de su fecha
   setTimeout(async () => {
     if (syncConfig() && navigator.onLine) await sincronizar();
+    procesarSubidas();
     const reub = alinearBimestresFichas();
     if (reub && UI.sesionAbierta) toast(reub + (reub > 1 ? ' fichas se ubicaron' : ' ficha se ubicó') + ' en el bimestre que corresponde a su fecha.');
   }, 2500);
